@@ -1,6 +1,8 @@
 // Travel time between two venues in Singapore using OneMap (SLA) routing, with real MRT and bus journeys.
 // Venues are free text from users, so they are looked up on OneMap search and then OpenStreetMap, never from a fixed list.
 
+import { onNusCampus, shuttleInfo } from './nus.js'
+
 const ONEMAP = 'https://www.onemap.gov.sg/api'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -120,6 +122,8 @@ export async function travel(from, to, departIso, coords = {}) {
   const options = settled.filter((s) => s.status === 'fulfilled' && s.value).map((s) => s.value).sort((x, y) => x.minutes - y.minutes)
   if (!options.length) return { options: [], error: settled.find((s) => s.status === 'rejected')?.reason?.message || 'No route found' }
   const out = { from: { name: from, lat: a[0], lng: a[1] }, to: { name: to, lat: b[0], lng: b[1] }, options }
+  // Both stops on the NUS campus: the internal shuttle is an option too, with its published frequency.
+  if (onNusCampus(a) && onNusCampus(b)) out.shuttle = shuttleInfo(departIso)
   cache.set(key, out)
   return out
 }
