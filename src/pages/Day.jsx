@@ -59,7 +59,7 @@ function NodeCard({ node, next, i, t, userId }) {
   return (
     <motion.li layout initial={{ opacity: 0, x: -24, scale: 0.96 }} animate={{ opacity: 1, x: 0, scale: 1 }}
       transition={{ delay: Math.min(i, 5) * 0.06, type: 'spring', damping: 20 }} className="relative pl-9">
-      <span className={`absolute left-0 top-6 flex h-[26px] w-[26px] items-center justify-center rounded-full text-sm ring-4 ring-cloud ${open ? 'bg-coral' : 'bg-surface-2'}`}>
+      <span className={`absolute left-0 top-6 flex h-[26px] w-[26px] items-center justify-center rounded-full text-sm ring-4 ring-page ${open ? 'bg-coral' : 'bg-surface-2'}`}>
         {open && <span className="absolute inset-0 animate-ping rounded-full bg-coral/60" />}
         <span className="relative text-[13px]">{node.emoji}</span>
       </span>
@@ -132,7 +132,7 @@ export default function Day() {
 
       {day.members.some((m) => m.id === userId) && <div className="mt-6 flex justify-center pb-10">
         <motion.button whileTap={{ scale: 0.95 }} onClick={() => setAddOpen(true)} aria-label="Add a stop"
-          className="flex h-12 items-center gap-2 rounded-full bg-ink px-6 font-bold text-cloud shadow-xl shadow-amber-900/30">
+          className="flex h-12 items-center gap-2 rounded-full bg-fg px-6 font-bold text-page shadow-xl shadow-amber-900/30">
           <Plus size={20} />Add a stop
         </motion.button>
       </div>}

@@ -21,7 +21,7 @@ function Legs({ legs }) {
     <ol className="space-y-1.5">
       {legs.map((l, i) => (
         <li key={i} className="flex items-start gap-2">
-          <span className={`mt-0.5 flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${l.mode === 'mrt' ? 'bg-mint/20 text-mint' : 'bg-amber/20 text-amber'}`}>
+          <span className={`mt-0.5 flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${l.mode === 'mrt' ? 'bg-mint/20 text-mint-ink' : 'bg-amber/20 text-amber-ink'}`}>
             {l.mode === 'mrt' ? <TrainFront size={11} /> : <Bus size={11} />}{l.label}
           </span>
           <p className="min-w-0 flex-1 text-[12px] leading-snug">
@@ -65,18 +65,18 @@ export default function TravelLeg({ from, to }) {
     <div className="mt-2">
       {best && <button onClick={() => setOpen(!open)} aria-expanded={open}
         className="flex w-full items-center gap-2 rounded-2xl bg-surface/70 px-3 py-2 text-left text-[13px] active:scale-[0.99]">
-        <BestIcon size={15} className="shrink-0 text-mint" />
-        <span className="font-bold text-mint">{mins(best.minutes)}</span>
+        <BestIcon size={15} className="shrink-0 text-mint-ink" />
+        <span className="font-bold text-mint-ink">{mins(best.minutes)}</span>
         <span className="min-w-0 flex-1 truncate text-muted">
           {best.mode === 'transit' ? best.legs.map((l) => l.label).join(' › ') || 'Walk' : `${NAME[best.mode]} · ${km(best.meters)}`}
         </span>
-        <span className="rounded-full bg-mint/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint">Fastest</span>
+        <span className="rounded-full bg-mint/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-mint-ink">Fastest</span>
         <ChevronDown size={15} className={`shrink-0 text-muted transition ${open ? 'rotate-180' : ''}`} />
       </button>}
       {shuttle && (
         <div className="mt-1.5 flex items-center gap-2 rounded-2xl bg-amber/10 px-3 py-2 text-[13px]">
-          <Bus size={15} className="shrink-0 text-amber" />
-          <span className="font-bold text-amber">NUS shuttle</span>
+          <Bus size={15} className="shrink-0 text-amber-ink" />
+          <span className="font-bold text-amber-ink">NUS shuttle</span>
           <span className="min-w-0 flex-1 truncate text-muted">
             every {shuttle.every_min[0] === shuttle.every_min[1] ? `~${shuttle.every_min[0]}` : `${shuttle.every_min[0]} to ${shuttle.every_min[1]}`} min · {shuttle.routes.join(' ')}
           </span>

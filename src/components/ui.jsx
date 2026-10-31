@@ -12,7 +12,7 @@ export function Avatar({ p, size = 36, ring = false }) {
   return (
     <span
       style={style}
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br ${GRADS[idx]} font-bold text-ink ${ring ? 'ring-2 ring-cloud' : ''}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br ${GRADS[idx]} font-bold text-ink ${ring ? 'ring-2 ring-page' : ''}`}
       title={p?.display_name}
     >
       {p?.avatar_url ? (
@@ -36,7 +36,7 @@ export function AvatarStack({ people = [], size = 28, max = 4 }) {
       ))}
       {extra > 0 && (
         <span style={{ width: size, height: size, marginLeft: -size * 0.3, fontSize: size * 0.38 }}
-          className="inline-flex items-center justify-center rounded-full bg-surface-2 font-semibold text-muted ring-2 ring-cloud">
+          className="inline-flex items-center justify-center rounded-full bg-surface-2 font-semibold text-muted ring-2 ring-page">
           +{extra}
         </span>
       )}
@@ -51,7 +51,7 @@ export const Skeleton = ({ className = '' }) => (
 export function Button({ variant = 'primary', className = '', ...p }) {
   const v = {
     primary: 'bg-gradient-to-r from-coral to-amber text-ink shadow-lg shadow-coral/25',
-    ghost: 'bg-surface-2 text-ink',
+    ghost: 'bg-surface-2 text-fg',
     mint: 'bg-mint text-ink',
   }[variant]
   return (
@@ -64,14 +64,14 @@ export function Button({ variant = 'primary', className = '', ...p }) {
 export const Field = ({ label, ...p }) => (
   <label className="block">
     <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted">{label}</span>
-    <input {...p} className="h-12 w-full rounded-2xl border border-surface-2 bg-surface px-4 text-[16px] text-ink outline-none placeholder:text-muted/60 focus:border-coral" />
+    <input {...p} className="h-12 w-full rounded-2xl border border-surface-2 bg-surface px-4 text-[16px] text-fg outline-none placeholder:text-muted/60 focus:border-coral" />
   </label>
 )
 
 export function ErrorState({ message = 'Something went wrong', onRetry }) {
   return (
-    <div className="mx-5 mt-10 flex flex-col items-center gap-3 rounded-3xl bg-surface p-8 shadow-sm shadow-amber-900/10 text-center">
-      <AlertTriangle className="text-amber" />
+    <div className="mx-5 mt-10 flex flex-col items-center gap-3 rounded-3xl bg-surface p-8 text-center">
+      <AlertTriangle className="text-amber-ink" />
       <p className="text-sm text-muted">{message}</p>
       {onRetry && <Button variant="ghost" onClick={onRetry} className="h-10">Try again</Button>}
     </div>
