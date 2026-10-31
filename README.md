@@ -60,6 +60,33 @@ Running the demo costs $0 per month on the free tiers.
 
 Going beyond a demo means leaving Vercel Hobby for Pro ($20/mo per the same page) because Hobby forbids commercial use, and moving Supabase off the Free plan if the project must not pause.
 
+## Before and after
+
+**Before:** a group plans a day in one app that logs and shares the plan (Setlog), then switches to Google Maps to find the venue and work out how to get from stop to stop.
+**After:** happypath does both in one place.
+A day is a chain of stops, each stop has real places and MRT, bus and walking travel times to the next, and every stop prompts the whole group to post a photo to a shared diary.
+
+The part of this that has a published price is the maps work, so that is the like-for-like comparison.
+Building the same place search, place details and routing on Google Maps Platform instead of OneMap and OpenStreetMap would be billed per request.
+Prices are USD per 1,000 billable events, from https://developers.google.com/maps/billing-and-pricing/pricing (last updated 2026-10-30, read 2026-10-31).
+
+| Google Maps Platform SKU | Free per month | Then per 1,000 |
+| --- | --- | --- |
+| Places Autocomplete requests | 10,000 | $2.83 |
+| Place Details Essentials | 10,000 | $5.00 |
+| Routes: Compute Routes Essentials | 10,000 | $5.00 |
+
+Worked example, using an illustrative workload of 100,000 requests a month for each of the three SKUs:
+
+- Autocomplete: 90,000 billable at $2.83 per 1,000 is $254.70.
+- Place Details: 90,000 billable at $5.00 per 1,000 is $450.00.
+- Compute Routes Essentials: 90,000 billable at $5.00 per 1,000 is $450.00.
+- Total: **$1,154.70 per month**, against $0 per month for the same workload's hosting on the free tiers above, so long as it stays within their limits.
+
+At or below 10,000 requests per SKU a month, Google would also be $0, so the saving only appears as usage grows.
+The "after" figure covers hosting and data only. It does not include OneMap, whose terms we could not verify.
+This comparison does not price Setlog or the consumer Google Maps app, because we could not read an official price for either.
+
 ## Data, assets and licences
 
 - happypath is released under the MIT licence (see `LICENSE`).
