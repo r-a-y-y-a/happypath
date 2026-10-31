@@ -30,7 +30,13 @@ const PHOTOS = {
   dinner: img('1414235077428-338989a2e8c0'),
   hike: img('1506905925346-21bda4d32df4'),
   ramen: img('1540189549336-e6e99c3679fe'),
-  climbPriya: img('1534438327276-14e5300c3a48'),
+  climbJun: img('1534438327276-14e5300c3a48'),
+  bike: img('1485965120184-e220f721d03e'),
+  ubinLunch: img('1504674900247-0877df9cc836'),
+  pancakes: img('1567620905732-2d1ec7ab7445'),
+  hawker: img('1555396273-367ea4eb4db5'),
+  sunset: img('1472214103451-9374bd1c798e'),
+  shore: img('1500375592092-40eb2168fd21'),
 }
 
 const must = ({ data, error }, what) => {
@@ -95,7 +101,8 @@ const insert = async (table, rows) => must(await sb.from(table).insert(rows).sel
 
 // Friendships are optional until supabase/friends.sql has been run, so a missing table only warns.
 async function seedFriends({ maya, jun, priya, daniel }) {
-  const pairs = [[maya, jun], [maya, priya], [maya, daniel], [jun, priya], [priya, daniel]]
+  // A small group: Maya is friends with exactly three people.
+  const pairs = [[maya, jun], [maya, priya], [maya, daniel]]
   const list = [maya, jun, priya, daniel]
   const rows = pairs.flatMap(([a, b]) => [{ user_id: a, friend_id: b }, { user_id: b, friend_id: a }])
   const gone = await sb.from('friendships').delete().in('user_id', list)
@@ -114,61 +121,72 @@ async function main() {
   ), 'upsert profiles')
   await wipe(ids)
 
-  // Maya's past days: 3 days, 2 nodes each, one post per node.
-  const past = [
-    { shift: -2, title: 'Slow Sunday', members: [maya, jun], nodes: [
-      { title: 'Coffee at Tiong Bahru Bakery', venue: 'Tiong Bahru Bakery', emoji: '☕', from: '09:00', to: '10:30', photo: PHOTOS.coffee, caption: 'Flat white and a kouign-amann. Sunday sorted.', at: '09:40', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a bite next time!'], [priya, 'That pastry 😍']] },
-      { title: 'Run at East Coast Park', venue: 'East Coast Park', emoji: '🏃', from: '17:00', to: '18:30', photo: PHOTOS.run, caption: '10k done, legs gone.', at: '17:50', who: maya, likes: [jun, daniel, priya], comments: [[daniel, 'Pace?? Respect.']] },
-    ] },
-    { shift: -5, title: 'Beach day', members: [maya, priya, daniel], nodes: [
-      { title: 'Sentosa beach hangout', venue: 'Palawan Beach', emoji: '🏖️', from: '11:00', to: '14:00', photo: PHOTOS.beach, caption: 'Pretending this is a holiday.', at: '12:15', who: maya, likes: [jun, priya, daniel], comments: [[priya, 'Take me back'], [daniel, 'Best day of the month']] },
-      { title: 'Dinner at Newton', venue: 'Newton Food Centre', emoji: '🍢', from: '19:00', to: '21:00', photo: PHOTOS.dinner, caption: 'Sambal stingray, no regrets.', at: '19:45', who: maya, likes: [jun, priya], comments: [[priya, 'The stingray!!']] },
-    ] },
-    { shift: -9, title: 'Hike and ramen', members: [maya, jun, priya], nodes: [
-      { title: 'MacRitchie treetop walk', venue: 'MacRitchie Reservoir', emoji: '🥾', from: '07:30', to: '10:00', photo: PHOTOS.hike, caption: 'Up before the sun for this.', at: '08:20', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Worth the 6am alarm'], [priya, 'Gorgeous light']] },
-      { title: 'Ramen night', venue: 'Ippudo Tanjong Pagar', emoji: '🍜', from: '19:30', to: '21:00', photo: PHOTOS.ramen, caption: 'Extra noodles, always.', at: '20:05', who: maya, likes: [jun, priya, daniel], comments: [[daniel, 'Kae-dama gang']] },
-    ] },
-  ]
-
-  for (const d of past) {
-    const date = sgDate(d.shift)
-    const [day] = await insert('days', { owner_id: maya, title: d.title, date })
-    await insert('day_members', d.members.map((user_id) => ({ day_id: day.id, user_id })))
-    for (const n of d.nodes) {
-      const [node] = await insert('nodes', { day_id: day.id, owner_id: maya, title: n.title, venue: n.venue, emoji: n.emoji, starts_at: at(date, n.from), ends_at: at(date, n.to) })
-      await insert('node_members', d.members.map((user_id) => ({ node_id: node.id, user_id })))
+  // Day members are on every stop of a day, so a stop shared with only one friend uses `with` (stop-level members)
+  // on a day that only the owner belongs to. Maya shares stops with Jun alone. Priya and Daniel have their own trips.
+  const seedDay = async ({ owner, shift, title, members = [], nodes }) => {
+    const date = sgDate(shift)
+    const [day] = await insert('days', { owner_id: owner, title, date })
+    await insert('day_members', [owner, ...members].map((user_id) => ({ day_id: day.id, user_id })))
+    for (const n of nodes) {
+      const [node] = await insert('nodes', { day_id: day.id, owner_id: owner, title: n.title, venue: n.venue, emoji: n.emoji, starts_at: at(date, n.from), ends_at: at(date, n.to) })
+      await insert('node_members', [...new Set([owner, ...members, ...(n.with || [])])].map((user_id) => ({ node_id: node.id, user_id })))
+      if (!n.photo) continue
       const [post] = await insert('posts', { node_id: node.id, author_id: n.who, photo_path: n.photo, caption: n.caption, created_at: postAt(date, n.at) })
       await insert('likes', n.likes.map((user_id) => ({ post_id: post.id, user_id })))
       await insert('comments', n.comments.map(([author_id, body], i) => ({ post_id: post.id, author_id, body, created_at: postAt(date, n.at.replace(/:\d\d$/, `:${String(10 + i * 7).padStart(2, '0')}`)) })))
     }
+    return { day, date }
   }
+
+  // Maya's past days. Jun joins only the stops marked `with`.
+  await seedDay({ owner: maya, shift: -2, title: 'Slow Sunday', nodes: [
+    { title: 'Coffee at Tiong Bahru Bakery', venue: 'Tiong Bahru Bakery', emoji: '☕', from: '09:00', to: '10:30', with: [jun], photo: PHOTOS.coffee, caption: 'Flat white and a kouign-amann. Sunday sorted.', at: '09:40', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a bite next time!'], [priya, 'That pastry 😍']] },
+    { title: 'Run at East Coast Park', venue: 'East Coast Park', emoji: '🏃', from: '17:00', to: '18:30', photo: PHOTOS.run, caption: '10k done, legs gone.', at: '17:50', who: maya, likes: [jun, daniel, priya], comments: [[daniel, 'Pace?? Respect.']] },
+  ] })
+  await seedDay({ owner: maya, shift: -5, title: 'Beach day', nodes: [
+    { title: 'Sentosa beach hangout', venue: 'Palawan Beach', emoji: '🏖️', from: '11:00', to: '14:00', photo: PHOTOS.beach, caption: 'Pretending this is a holiday.', at: '12:15', who: maya, likes: [jun, priya, daniel], comments: [[priya, 'Take me back'], [daniel, 'Best day of the month']] },
+    { title: 'Dinner at Newton', venue: 'Newton Food Centre', emoji: '🍢', from: '19:00', to: '21:00', photo: PHOTOS.dinner, caption: 'Sambal stingray, no regrets.', at: '19:45', who: maya, likes: [jun, priya], comments: [[priya, 'The stingray!!']] },
+  ] })
+  await seedDay({ owner: maya, shift: -9, title: 'Hike and ramen', nodes: [
+    { title: 'MacRitchie treetop walk', venue: 'MacRitchie Reservoir', emoji: '🥾', from: '07:30', to: '10:00', with: [jun], photo: PHOTOS.hike, caption: 'Up before the sun for this.', at: '08:20', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Worth the 6am alarm'], [priya, 'Gorgeous light']] },
+    { title: 'Ramen night', venue: 'Ippudo Tanjong Pagar', emoji: '🍜', from: '19:30', to: '21:00', photo: PHOTOS.ramen, caption: 'Extra noodles, always.', at: '20:05', who: maya, likes: [jun, priya, daniel], comments: [[daniel, 'Kae-dama gang']] },
+  ] })
+
+  // Each friend's own trips, none shared with Maya.
+  await seedDay({ owner: jun, shift: -1, title: 'Pulau Ubin ride', nodes: [
+    { title: 'Bike the Ubin trails', venue: 'Pulau Ubin', emoji: '🚲', from: '09:00', to: '11:30', photo: PHOTOS.bike, caption: 'Mud, mangroves and zero signal.', at: '10:15', who: jun, likes: [maya, daniel], comments: [[maya, 'Next time I am coming with you'], [daniel, 'Your chain fell off twice 😂']] },
+    { title: 'Seafood lunch at Ubin', venue: 'Ubin Town', emoji: '🦀', from: '12:00', to: '13:30', photo: PHOTOS.ubinLunch, caption: 'Earned every bite.', at: '12:40', who: jun, likes: [maya, priya], comments: [[priya, 'Chilli crab??']] },
+  ] })
+  await seedDay({ owner: priya, shift: -3, title: 'Hawker crawl', nodes: [
+    { title: 'Breakfast at Tiong Bahru Market', venue: 'Tiong Bahru Market', emoji: '🥞', from: '08:00', to: '09:30', photo: PHOTOS.pancakes, caption: 'Kaya toast, then a second breakfast.', at: '08:35', who: priya, likes: [maya, jun, daniel], comments: [[maya, 'The queue was worth it?']] },
+    { title: 'Lunch at Maxwell', venue: 'Maxwell Food Centre', emoji: '🍜', from: '12:00', to: '13:30', photo: PHOTOS.hawker, caption: 'Chicken rice, obviously.', at: '12:30', who: priya, likes: [maya, daniel], comments: [[daniel, 'Tian Tian or not?']] },
+  ] })
+  await seedDay({ owner: daniel, shift: -6, title: 'Sunset by the sea', nodes: [
+    { title: 'Sunset at Marina Barrage', venue: 'Marina Barrage', emoji: '🌅', from: '18:00', to: '19:30', photo: PHOTOS.sunset, caption: 'Chasing the last light.', at: '18:45', who: daniel, likes: [maya, jun, priya], comments: [[maya, 'Golden hour king']] },
+    { title: 'Shoreline walk', venue: 'East Coast Park', emoji: '🌊', from: '19:45', to: '21:00', photo: PHOTOS.shore, caption: 'Breeze, waves, nothing else.', at: '20:15', who: daniel, likes: [maya, priya], comments: [[priya, 'So calm']] },
+  ] })
 
   // Today: Saturday in the city. The sunset node is created live in the demo, so it is not seeded.
-  const today = sgDate(0)
-  const [day] = await insert('days', { owner_id: maya, title: 'Saturday in the city', date: today })
-  await insert('day_members', [maya, jun, priya, daniel].map((user_id) => ({ day_id: day.id, user_id })))
-
-  const mk = async (title, venue, emoji, from, to, members) => {
-    const [node] = await insert('nodes', { day_id: day.id, owner_id: maya, title, venue, emoji, starts_at: at(today, from), ends_at: at(today, to) })
-    await insert('node_members', members.map((user_id) => ({ node_id: node.id, user_id })))
-    return node
-  }
-  const brunch = await mk('Brunch at Common Man', 'Common Man Stan', '🥐', '10:00', '11:30', [maya, jun, priya])
-  const climb = await mk('Climb session at Boulder Planet', 'Boulder Planet Sembawang', '🧗', '13:00', '15:00', [maya, jun, priya])
-  await mk('Dinner at Lau Pa Sat', 'Lau Pa Sat', '🍢', '20:00', '21:30', [maya, priya, daniel])
-
-  const [junPost] = await insert('posts', { node_id: brunch.id, author_id: jun, photo_path: PHOTOS.brunchJun, caption: 'Eggs benny arrived. Maya is late again.', created_at: postAt(today, '10:25') })
-  const [priyaPost] = await insert('posts', { node_id: climb.id, author_id: priya, photo_path: PHOTOS.climbPriya, caption: 'Finally sent the purple one 💜', created_at: postAt(today, '13:50') })
+  // Jun shares brunch and the climb with Maya. Dinner is Maya's alone until a guest joins.
+  const { day, date: today } = await seedDay({ owner: maya, shift: 0, title: 'Saturday in the city', nodes: [
+    { title: 'Brunch at Common Man', venue: 'Common Man Stan', emoji: '🥐', from: '10:00', to: '11:30', with: [jun] },
+    { title: 'Climb session at Boulder Planet', venue: 'Boulder Planet Sembawang', emoji: '🧗', from: '13:00', to: '15:00', with: [jun] },
+    { title: 'Dinner at Lau Pa Sat', venue: 'Lau Pa Sat', emoji: '🍢', from: '20:00', to: '21:30' },
+  ] })
+  const todayNodes = must(await sb.from('nodes').select('id, title').eq('day_id', day.id), 'read today nodes')
+  const nodeId = (t) => todayNodes.find((n) => n.title.startsWith(t)).id
+  const [junPost] = await insert('posts', { node_id: nodeId('Brunch'), author_id: jun, photo_path: PHOTOS.brunchJun, caption: 'Eggs benny arrived. Maya is late again.', created_at: postAt(today, '10:25') })
+  const [junClimb] = await insert('posts', { node_id: nodeId('Climb'), author_id: jun, photo_path: PHOTOS.climbJun, caption: 'Finally sent the purple one 💜', created_at: postAt(today, '13:50') })
   await insert('likes', [maya, priya, daniel].map((user_id) => ({ post_id: junPost.id, user_id })))
-  await insert('likes', [maya, jun].map((user_id) => ({ post_id: priyaPost.id, user_id })))
+  await insert('likes', [maya, priya].map((user_id) => ({ post_id: junClimb.id, user_id })))
   await insert('comments', [
     { post_id: junPost.id, author_id: maya, body: 'I was on the way, I swear!', created_at: postAt(today, '10:31') },
-    { post_id: priyaPost.id, author_id: jun, body: 'Flash it again for the camera 😂', created_at: postAt(today, '13:58') },
+    { post_id: junClimb.id, author_id: maya, body: 'Flash it again for the camera 😂', created_at: postAt(today, '13:58') },
   ])
 
   await seedFriends({ maya, jun, priya, daniel })
 
-  console.log(`Seeded: 4 users, 4 days (3 past + Saturday ${today}), 9 nodes.`)
+  console.log(`Seeded: 4 users, 7 days (3 past + 3 friend trips + Saturday ${today}).`)
 }
 
 main().catch((e) => {
