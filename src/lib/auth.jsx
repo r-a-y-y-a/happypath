@@ -59,19 +59,6 @@ export function AuthProvider({ children }) {
     if (error) throw error
   }
 
-  const guestLogin = async (name) => {
-    if (!MOCK && !supabase) throw new Error('Supabase env vars are missing')
-    let id
-    if (MOCK) { id = 'u-guest-' + Math.random().toString(36).slice(2, 7); mockSignIn(id) }
-    else {
-      const { data, error } = await supabase.auth.signInAnonymously()
-      if (error) throw error
-      id = data.user.id
-    }
-    setUserId(id)
-    setProfile(await put('/profiles/me', { display_name: name.trim() }))
-  }
-
   const signOut = async () => {
     if (MOCK) mockSignOut(); else await supabase?.auth.signOut()
     setUserId(null); setProfile(null)
@@ -85,7 +72,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <Ctx.Provider value={{ userId, profile, demoLogin, guestLogin, googleLogin, signOut, saveProfile, loading: userId === undefined }}>
+    <Ctx.Provider value={{ userId, profile, demoLogin, googleLogin, signOut, saveProfile, loading: userId === undefined }}>
       {children}
     </Ctx.Provider>
   )
