@@ -45,7 +45,7 @@ export default function Profile() {
       </div>
       <div className="mt-4 flex items-center justify-between">
         <span className="rounded-full bg-surface px-3.5 py-1.5 text-sm font-semibold">
-          <b className="text-coral">{posts.length}</b> {posts.length === 1 ? 'moment' : 'moments'}
+          <b className="text-coral-ink">{posts.length}</b> {posts.length === 1 ? 'moment' : 'moments'}
         </span>
         {userId === id && (
           <button onClick={async () => { await signOut(); nav('/') }} className="flex items-center gap-1.5 text-xs font-semibold text-muted">
@@ -123,10 +123,10 @@ export function PostDetail() {
           <AnimatePresence>
             {burst > 0 && (
               <motion.div key={burst} initial={{ scale: 0.3, opacity: 1 }} animate={{ scale: 1.6, opacity: 0 }} transition={{ duration: 0.7 }}
-                className="pointer-events-none absolute inset-0 flex items-center justify-center text-coral"><Heart size={96} fill="currentColor" /></motion.div>
+                className="pointer-events-none absolute inset-0 flex items-center justify-center text-coral-ink"><Heart size={96} fill="currentColor" /></motion.div>
             )}
           </AnimatePresence>
-          <div className="absolute left-3 top-3 rounded-full bg-ink/70 px-3 py-1.5 text-xs font-bold backdrop-blur">
+          <div className="absolute left-3 top-3 rounded-full bg-ink/70 text-cloud px-3 py-1.5 text-xs font-bold backdrop-blur">
             {p.node.emoji} {p.node.title} · {fmtDate(p.created_at)}, {fmtTime(p.created_at)}
           </div>
         </div>
@@ -154,7 +154,7 @@ export function PostDetail() {
               className="flex gap-3">
               <Link to={`/profile/${c.author.id}`}><Avatar p={c.author} size={32} /></Link>
               <div className="rounded-2xl bg-surface px-3.5 py-2.5">
-                <p className="text-xs text-muted"><b className="text-cloud">{c.author.display_name}</b> · {ago(c.created_at)}</p>
+                <p className="text-xs text-muted"><b className="text-fg">{c.author.display_name}</b> · {ago(c.created_at)}</p>
                 <p className="text-[15px]">{c.body}</p>
               </div>
             </motion.li>

@@ -1,21 +1,63 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Day theme is the base; night theme overrides under [data-theme="dark"]. */
+:root {
+  color-scheme: light;
+  --hp-page: #faf7ff;
+  --hp-fg: #1a1330;
+  --hp-surface: #ffffff;
+  --hp-surface-2: #ece6fa;
+  --hp-muted: #5e5679;
+  --hp-coral-ink: #c8321e;
+  --hp-amber-ink: #a04a05;
+  --hp-mint-ink: #0b6b63;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --hp-page: #0f0b1a;
+  --hp-fg: #f8f5ff;
+  --hp-surface: #1c1630;
+  --hp-surface-2: #2a2145;
+  --hp-muted: #a39bbf;
+  --hp-coral-ink: #ff6b57;
+  --hp-amber-ink: #ffc145;
+  --hp-mint-ink: #5eead4;
+}
+
 @theme {
+  /* Fixed brand constants: use for text/fills sitting on bright accents or photos */
   --color-ink: #0f0b1a;
-  --color-surface: #1c1630;
-  --color-surface-2: #2a2145;
+  --color-cloud: #f8f5ff;
   --color-coral: #ff6b57;
   --color-amber: #ffc145;
   --color-mint: #5eead4;
-  --color-cloud: #f8f5ff;
-  --color-muted: #a39bbf;
+
+  /* Themed semantic tokens */
+  --color-page: var(--hp-page);
+  --color-fg: var(--hp-fg);
+  --color-surface: var(--hp-surface);
+  --color-surface-2: var(--hp-surface-2);
+  --color-muted: var(--hp-muted);
+  --color-coral-ink: var(--hp-coral-ink);
+  --color-amber-ink: var(--hp-amber-ink);
+  --color-mint-ink: var(--hp-mint-ink);
+
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 body {
   margin: 0;
-  background: var(--color-ink);
-  color: var(--color-cloud);
+  background: var(--color-page);
+  color: var(--color-fg);
   font-family: var(--font-sans);
+  transition: background-color 0.25s, color 0.25s;
+}
+
+:focus-visible {
+  outline: 2px solid var(--hp-coral-ink);
+  outline-offset: 2px;
 }
