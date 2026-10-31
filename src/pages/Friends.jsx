@@ -32,7 +32,7 @@ export default function Friends() {
                   <p className="truncate font-display text-lg font-extrabold">{f.display_name}</p>
                   {f.latest_day ? (
                     <>
-                      <p className="truncate text-[13px] text-muted">{f.latest_day.title} · {fmtDate(f.latest_day.date + 'T12:00:00')}</p>
+                      <p className="truncate text-[13px] text-muted">{f.latest_day.title} · {fmtDate(f.latest_day.date + 'T12:00:00+08:00')}</p>
                       <p className="mt-1 truncate text-lg tracking-wide">{f.latest_day.stops.map((s) => s.emoji).join(' ')}</p>
                     </>
                   ) : (

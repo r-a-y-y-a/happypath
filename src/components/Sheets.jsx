@@ -57,12 +57,8 @@ export function AddNodeSheet({ open, onClose, day, onAdded }) {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
-  const iso = (hhmm) => {
-    const d = new Date(day.date + 'T00:00:00')
-    const [h, m] = hhmm.split(':')
-    d.setHours(+h, +m, 0, 0)
-    return d.toISOString()
-  }
+  // Stop times are entered in Singapore time (UTC+8).
+  const iso = (hhmm) => new Date(`${day.date}T${hhmm}:00+08:00`).toISOString()
   const submit = async (e) => {
     e.preventDefault()
     if (!f.title.trim()) return setErr('Give it a name')

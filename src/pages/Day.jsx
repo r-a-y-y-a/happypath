@@ -109,7 +109,7 @@ export default function Day() {
     <div className="px-5">
       <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-coral/90 via-coral to-amber p-5 text-ink">
         <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
-        <p className="text-xs font-bold uppercase tracking-widest opacity-70">{fmtDate(day.date + 'T12:00:00')}</p>
+        <p className="text-xs font-bold uppercase tracking-widest opacity-70">{fmtDate(day.date + 'T12:00:00+08:00')}</p>
         <h1 className="mt-1 font-display text-[30px] font-extrabold leading-tight">{day.title}</h1>
         <div className="mt-4 flex items-center justify-between">
           <AvatarStack people={day.members} size={34} max={5} />

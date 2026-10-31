@@ -76,7 +76,7 @@ export default function Profile() {
                 <Link to={`/day/${d.id}`} className="flex items-center gap-3 rounded-3xl bg-surface p-4 active:scale-[0.99]">
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold">{d.title}</p>
-                    <p className="text-[12px] text-muted">{fmtDate(d.date + 'T12:00:00')} · {d.nodes.length} {d.nodes.length === 1 ? 'stop' : 'stops'}</p>
+                    <p className="text-[12px] text-muted">{fmtDate(d.date + 'T12:00:00+08:00')} · {d.nodes.length} {d.nodes.length === 1 ? 'stop' : 'stops'}</p>
                     <p className="mt-1 truncate text-lg tracking-wide">{d.nodes.map((n) => n.emoji).join(' ')}</p>
                   </div>
                   <ChevronRight size={18} className="shrink-0 text-muted" />

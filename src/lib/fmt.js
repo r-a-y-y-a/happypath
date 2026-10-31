@@ -1,9 +1,11 @@
+// The demo runs on Singapore time whatever the device's own timezone is.
+export const TZ = 'Asia/Singapore'
 export const fmtTime = (iso) =>
-  new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).replace(' ', '').toLowerCase()
+  new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: TZ }).replace(' ', '').toLowerCase()
 export const fmtRange = (n) => `${fmtTime(n.starts_at)} - ${fmtTime(n.ends_at)}`
 export const fmtDate = (iso) =>
-  new Date(iso).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
-export const localDate = (d = new Date()) => d.toLocaleDateString('en-CA')
+  new Date(iso).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: TZ })
+export const localDate = (d = new Date()) => d.toLocaleDateString('en-CA', { timeZone: TZ })
 export const ago = (iso, t = Date.now()) => {
   const s = Math.max(0, (t - new Date(iso).getTime()) / 1000)
   if (s < 60) return 'just now'
