@@ -104,10 +104,15 @@ export function AddNodeSheet({ open, onClose, day, onAdded }) {
 
 export function InviteSheet({ open, onClose, day }) {
   const [copied, setCopied] = useState(false)
+  const [failed, setFailed] = useState(false)
   const url = `${location.origin}/join/${day.id}${isJumped() ? `?co=${Math.round(getOffset())}` : ''}`
+  const canShare = typeof navigator !== 'undefined' && !!navigator.share
   const copy = async () => {
-    try { await navigator.clipboard.writeText(url) } catch { /* ignore */ }
-    setCopied(true); setTimeout(() => setCopied(false), 1800)
+    try { await navigator.clipboard.writeText(url); setFailed(false); setCopied(true); setTimeout(() => setCopied(false), 1800) }
+    catch { setFailed(true) }
+  }
+  const share = async () => {
+    try { await navigator.share({ title: day.title, text: `Join ${day.title} on happypath`, url }) } catch { /* cancelled */ }
   }
   return (
     <Sheet open={open} onClose={onClose} title="Invite friends">
@@ -115,11 +120,17 @@ export function InviteSheet({ open, onClose, day }) {
         <div className="rounded-[28px] bg-cloud p-5 shadow-xl shadow-amber-900/15 ring-1 ring-surface-2">
           <QRCodeSVG value={url} size={220} bgColor="#fff8e6" fgColor="#3b2710" level="M" />
         </div>
-        <p className="text-center text-sm text-muted">Scan to join <b className="text-fg">{day.title}</b></p>
-        <button onClick={copy} className="flex w-full items-center gap-3 rounded-2xl bg-surface-2 px-4 py-3 text-left">
-          <span className="min-w-0 flex-1 truncate text-sm text-muted">{url}</span>
-          {copied ? <Check size={18} className="text-mint-ink" /> : <Copy size={18} />}
-        </button>
+        <p className="text-center text-sm text-muted">Scan to join <b className="text-fg">{day.title}</b>, or send the link. Anyone who joins becomes friends with everyone on the day.</p>
+        <div className="w-full space-y-3">
+          <Button onClick={copy} className="w-full">
+            {copied ? <><Check size={18} /> Link copied</> : <><Copy size={18} /> Copy invite link</>}
+          </Button>
+          {canShare && <Button onClick={share} variant="mint" className="w-full"><Send size={18} /> Share link</Button>}
+          {failed && (
+            <input readOnly value={url} onFocus={(e) => e.target.select()} aria-label="Invite link"
+              className="h-12 w-full rounded-2xl border border-surface-2 bg-page px-4 text-sm text-fg" />
+          )}
+        </div>
       </div>
     </Sheet>
   )
