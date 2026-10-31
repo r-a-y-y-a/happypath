@@ -5,7 +5,7 @@ import ThemeToggle from '../components/ThemeToggle'
 import { useAuth } from '../lib/auth'
 import { MOCK } from '../lib/supabase'
 
-const photos = ['1504754524776-8f4f37790ca0', '1507525428034-b723cf961d3e', '1522163182402-834f871fd851', '1414235077428-338989a2e8c0', '1495474472287-4d71bcdd2085', '1540189549336-e6e99c3679fe']
+const photos = ['brunch', 'climb-wall', 'sunset', 'kaya', 'ubin-bike', 'chickenrice']
 
 export default function SignIn({ onDone, heading = 'Plan the day.', sub = 'Catch the moment.' }) {
   const { demoLogin, guestLogin, googleLogin } = useAuth()
@@ -23,7 +23,7 @@ export default function SignIn({ onDone, heading = 'Plan the day.', sub = 'Catch
       <ThemeToggle className="absolute right-5 top-[max(14px,env(safe-area-inset-top))] z-10 shadow-md" />
       <div className="relative grid grid-cols-3 gap-2.5">
         {photos.map((p, i) => (
-          <motion.img key={p} src={`https://images.unsplash.com/photo-${p}?w=400&h=533&q=70&auto=format&fit=crop`} alt=""
+          <motion.img key={p} src={`/seed/thumb/${p}.jpg`} alt=""
             initial={{ opacity: 0, y: 24, rotate: i % 2 ? 3 : -3 }} animate={{ opacity: 1, y: i % 2 ? 14 : 0, rotate: i % 2 ? 2 : -2 }}
             transition={{ delay: i * 0.07, type: 'spring', damping: 16 }}
             className="aspect-[3/4] w-full rounded-2xl object-cover shadow-xl shadow-amber-900/25" />

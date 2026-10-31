@@ -76,7 +76,7 @@ A bottom bar with four tabs. Each tab is a route, and every screen renders insid
 | Tab | Route | Screen |
 |---|---|---|
 | My day | `/` (then `/day/:id`) | the caller's current day. Each stop opens `/node/:id`, the activity page with every photo and caption, tapping a photo opens `/profile/:authorId/post/:postId` |
-| Today | `/friends` | each friend's latest day with a strip of their photos, tapping opens `/day/:id` |
+| Feed | `/friends` | each friend's latest day with a strip of their photos, tapping opens `/day/:id` |
 | Social | `/social` | all friends as profile cards (tap opens `/profile/:id`) and a search to add people with `GET /api/profiles?q=` and `POST /api/friends/:id` |
 | Account | `/account` | edit name and bio with `PUT /api/profiles/me`, day or night theme, link to the caller's diary, sign out |
 Links that leave a tab pass `state={{ from: 'friends' | 'social' | 'account' }}` so the bar keeps the right tab highlighted.

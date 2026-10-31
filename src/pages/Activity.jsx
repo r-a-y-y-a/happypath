@@ -101,9 +101,9 @@ export default function Activity() {
           <div className="min-w-0">
             <p className="text-3xl leading-none">{node.emoji}</p>
             <h1 className="mt-2 font-display text-[26px] font-extrabold leading-tight">{node.title}</h1>
-            <p className="mt-1 flex items-center gap-1 text-[13px] text-muted">
-              {node.venue && <><MapPin size={13} className="shrink-0" /><span className="truncate">{node.venue}</span><span>·</span></>}
-              <span className="shrink-0">{fmtRange(node)}</span>
+            <p className="mt-1 text-[13px] text-muted">
+              {node.venue && <><MapPin size={13} className="-mt-0.5 mr-1 inline" />{node.venue} · </>}
+              {fmtRange(node)}
             </p>
           </div>
           <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${cls}`}>{label}</span>

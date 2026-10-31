@@ -18,7 +18,7 @@ export default function Friends() {
   if (!friends) return <div className="space-y-3 px-5">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-28" />)}</div>
   return (
     <div className="px-5">
-      <h1 className="font-display text-3xl font-extrabold">Today</h1>
+      <h1 className="font-display text-3xl font-extrabold">Feed</h1>
       <p className="mt-1 text-[13px] text-muted">What your friends are up to right now. Tap a day to see where they went and their photos.</p>
       {friends.length === 0 ? (
         <Empty emoji="👋" title="No friends yet" body="Join a friend's day by their link or QR code and you will be friends." />
@@ -44,9 +44,9 @@ export default function Friends() {
                 </div>
                 {f.latest_day?.photos?.length > 0 && (
                   <>
-                    <div className="mt-3 grid grid-cols-4 gap-1.5">
+                    <div className={`mt-3 grid gap-1.5 ${f.latest_day.photos.length === 1 ? 'grid-cols-1' : f.latest_day.photos.length === 2 ? 'grid-cols-2' : f.latest_day.photos.length === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
                       {f.latest_day.photos.map((src) => (
-                        <img key={src} src={src} alt="" loading="lazy" className="aspect-square w-full rounded-2xl bg-surface-2 object-cover" />
+                        <img key={src} src={src} alt="" loading="lazy" className={`w-full rounded-2xl bg-surface-2 object-cover ${f.latest_day.photos.length < 3 ? 'aspect-[4/3]' : 'aspect-square'}`} />
                       ))}
                     </div>
                     <p className="mt-2 text-xs font-semibold text-muted">

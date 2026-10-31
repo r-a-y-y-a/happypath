@@ -68,15 +68,15 @@ function NodeCard({ node, next, i, t, userId }) {
         <Link to={`/node/${node.id}`} state={state} aria-label={`Open ${node.title}`} className="block">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h3 className="truncate font-display text-xl font-bold leading-tight">{node.title}</h3>
-              <p className="mt-0.5 truncate text-[13px] text-muted">{node.venue ? `${node.venue} · ` : ''}{fmtRange(node)}</p>
+              <h3 className="line-clamp-2 font-display text-xl font-bold leading-tight">{node.title}</h3>
+              <p className="mt-0.5 text-[13px] text-muted">{node.venue ? `${node.venue} · ` : ''}{fmtRange(node)}</p>
             </div>
             <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${cls}`}>{label}</span>
           </div>
           {node.photos?.length > 0 && (
-            <div className="mt-3 grid grid-cols-3 gap-1.5">
+            <div className={`mt-3 grid gap-1.5 ${node.photos.length === 1 ? 'grid-cols-1' : node.photos.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
               {node.photos.map((src, k) => (
-                <div key={src} className="relative aspect-square overflow-hidden rounded-2xl bg-surface-2">
+                <div key={src} className={`relative overflow-hidden rounded-2xl bg-surface-2 ${node.photos.length === 1 ? 'aspect-[16/9]' : 'aspect-square'}`}>
                   <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
                   {k === 2 && node.post_count > 3 && (
                     <span className="absolute inset-0 flex items-center justify-center bg-ink/55 text-lg font-extrabold text-cloud">+{node.post_count - 2}</span>
