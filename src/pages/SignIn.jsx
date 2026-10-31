@@ -3,11 +3,12 @@ import { motion } from 'framer-motion'
 import { Button, Field } from '../components/ui'
 import ThemeToggle from '../components/ThemeToggle'
 import { useAuth } from '../lib/auth'
+import { MOCK } from '../lib/supabase'
 
 const photos = ['1504754524776-8f4f37790ca0', '1507525428034-b723cf961d3e', '1522163182402-834f871fd851', '1414235077428-338989a2e8c0', '1495474472287-4d71bcdd2085', '1540189549336-e6e99c3679fe']
 
 export default function SignIn({ onDone, heading = 'Plan the day.', sub = 'Catch the moment.' }) {
-  const { demoLogin, guestLogin } = useAuth()
+  const { demoLogin, guestLogin, googleLogin } = useAuth()
   const [name, setName] = useState('')
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
@@ -36,7 +37,14 @@ export default function SignIn({ onDone, heading = 'Plan the day.', sub = 'Catch
         <p className="mt-3 text-[15px] text-muted">Chain your day into stops. Snap one real photo at each. Share the diary.</p>
       </div>
       <div className="relative mt-auto space-y-3 pt-8">
-        <Field label="Join as a guest" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
+        {!MOCK && (
+          <button onClick={run('google', googleLogin)} disabled={!!busy}
+            className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl bg-white text-[15px] font-bold text-[#3c4043] shadow-md ring-1 ring-black/10 transition active:scale-[0.98] disabled:opacity-60">
+            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+            {busy === 'google' ? 'Opening Google...' : 'Continue with Google'}
+          </button>
+        )}
+        <Field label="Or join as a guest" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
         <Button onClick={run('guest', () => guestLogin(name))} disabled={!name.trim() || !!busy} variant="mint" className="w-full">
           {busy === 'guest' ? 'Joining...' : 'Continue as guest'}
         </Button>

@@ -55,7 +55,6 @@ export default function Layout() {
                 <Clock3 size={13} />{fmtTime(t)}
               </button>
             )}
-            <ThemeToggle />
           </div>
         </header>
         <AnimatePresence mode="wait">
