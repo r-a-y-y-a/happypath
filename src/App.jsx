@@ -13,8 +13,8 @@ export default function App() {
   return (
     <main className="min-h-dvh flex flex-col items-center justify-center gap-4 p-6 text-center">
       <h1 className="text-4xl font-bold">happypath</h1>
-      <p className="text-slate-400">Plan the day. Catch the moment.</p>
-      <pre className="text-xs text-left bg-slate-800 rounded-lg p-3">
+      <p className="text-muted">Plan the day. Catch the moment.</p>
+      <pre className="text-xs text-left bg-surface rounded-lg p-3">
         {health ? JSON.stringify(health, null, 2) : 'checking api...'}
       </pre>
     </main>
