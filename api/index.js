@@ -69,7 +69,7 @@ async function buildNodes(sb, rows) {
   const [nm, dm, posts] = await Promise.all([
     sb.from('node_members').select('node_id, user_id').in('node_id', nodeIds),
     sb.from('day_members').select('day_id, user_id').in('day_id', dayIds),
-    sb.from('posts').select('node_id, photo_path, created_at').in('node_id', nodeIds).order('created_at', { ascending: false }),
+    sb.from('posts').select('node_id, author_id, photo_path, created_at').in('node_id', nodeIds).order('created_at', { ascending: false }),
   ])
   check(nm)
   check(dm)
@@ -93,6 +93,7 @@ async function buildNodes(sb, rows) {
         ends_at: n.ends_at,
         members: ids.map((i) => profiles[i]).filter(Boolean),
         post_count: posts.data.filter((p) => p.node_id === n.id).length,
+        post_authors: uniq(posts.data.filter((p) => p.node_id === n.id).map((p) => p.author_id)),
         photos: posts.data.filter((p) => p.node_id === n.id).slice(0, 3).map((p) => photoUrl(sb, p.photo_path)),
       }
     })

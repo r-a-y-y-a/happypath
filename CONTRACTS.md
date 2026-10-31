@@ -84,3 +84,5 @@ Links that leave a tab pass `state={{ from: 'friends' | 'social' | 'account' }}`
 ## Joining a day
 `POST /api/days/:id/join` also makes the caller friends with the day owner and every existing member.
 The invite sheet offers the QR code, a Copy invite link button and, where the device supports it, a native Share button.
+
+`Node.post_authors` lists the ids of everyone who has posted on that stop. The app hides "Post your moment" only when the signed-in user is in it, so deleting a post brings the button back.

@@ -58,7 +58,7 @@ export default function Activity() {
   const { id } = useParams()
   const { state: linkState } = useLocation()
   const { userId } = useAuth()
-  const { capture, posted } = useCapture()
+  const { capture, didPost } = useCapture()
   const t = useNow()
   const [data, setData] = useState(null)
   const [err, setErr] = useState('')
@@ -112,7 +112,7 @@ export default function Activity() {
           <AvatarStack people={node.members} size={30} max={5} />
           <span className="text-xs font-semibold text-muted">{posts.length} {posts.length === 1 ? 'moment' : 'moments'}</span>
         </div>
-        {open && isMember && !posted.includes(node.id) && (
+        {open && isMember && !didPost({ ...node, post_authors: posts.map((x) => x.author?.id) }) && (
           <Button onClick={() => capture(node)} className="mt-4 h-11 w-full"><Camera size={18} />Post your moment</Button>
         )}
       </div>

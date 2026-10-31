@@ -51,7 +51,7 @@ export const CHIP = {
 }
 
 function NodeCard({ node, next, i, t, userId }) {
-  const { capture, posted } = useCapture()
+  const { capture, didPost } = useCapture()
   const { state } = useLocation()
   const st = nodeState(node, t)
   const open = st === 'live' || st === 'grace'
@@ -92,7 +92,7 @@ function NodeCard({ node, next, i, t, userId }) {
             </span>
           </div>
         </Link>
-        {open && isMember && !posted.includes(node.id) && (
+        {open && isMember && !didPost(node) && (
           <Button onClick={() => capture(node)} className="mt-3 h-11 w-full"><Camera size={18} />Post your moment</Button>
         )}
       </div>

@@ -12,8 +12,6 @@ import BottomNav from './BottomNav'
 const CaptureCtx = createContext(null)
 export const useCapture = () => useContext(CaptureCtx)
 
-const postedKey = 'hp_posted'
-const getPosted = () => { try { return JSON.parse(localStorage.getItem(postedKey) || '[]') } catch { return [] } }
 
 export default function Layout() {
   const { userId } = useAuth()
@@ -23,7 +21,7 @@ export default function Layout() {
   const [clockOpen, setClockOpen] = useState(false)
   const [target, setTarget] = useState(null)
   const [file, setFile] = useState(null)
-  const [posted, setPosted] = useState(getPosted)
+  const [posted, setPosted] = useState([])
   const [dismissed, setDismissed] = useState([])
   const taps = useRef({ n: 0, t: 0 })
   const input = useRef(null)
@@ -36,11 +34,14 @@ export default function Layout() {
   }
 
   const capture = (node) => { setTarget(node); input.current?.click() }
+  // Whether you already posted on a stop comes from the server (so deleting a post brings the button back);
+  // `posted` only bridges the moment between posting and the next refresh.
+  const didPost = (n) => posted.includes(n.id) || !!(userId && n.post_authors?.includes(userId))
   const live = nodes.find(
-    (n) => windowOpen(n, t) && !posted.includes(n.id) && !dismissed.includes(n.id) &&
+    (n) => windowOpen(n, t) && !didPost(n) && !dismissed.includes(n.id) &&
       (!userId || n.members.some((m) => m.id === userId)),
   )
-  const ctx = useMemo(() => ({ capture, posted }), [posted])
+  const ctx = useMemo(() => ({ capture, didPost }), [posted, userId, nodes])
 
   return (
     <CaptureCtx.Provider value={ctx}>
@@ -69,8 +70,7 @@ export default function Layout() {
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; f && setFile(f) }} />
       <CameraSheet node={target} file={file} onClose={() => setFile(null)}
         onPosted={(p) => {
-          const next = [...posted, target.id]
-          localStorage.setItem(postedKey, JSON.stringify(next)); setPosted(next)
+          setPosted([...posted, target.id])
           setFile(null); nav(`/node/${target.id}`)
         }} />
       <ClockSheet open={clockOpen} onClose={() => setClockOpen(false)} nodes={nodes} />
