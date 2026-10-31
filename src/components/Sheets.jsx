@@ -63,13 +63,13 @@ export function InviteSheet({ open, onClose, day }) {
   return (
     <Sheet open={open} onClose={onClose} title="Invite friends">
       <div className="flex flex-col items-center gap-5">
-        <div className="rounded-[28px] bg-cloud p-5 shadow-2xl shadow-coral/20">
+        <div className="rounded-[28px] bg-cloud p-5 shadow-xl shadow-amber-900/15 ring-1 ring-surface-2">
           <QRCodeSVG value={url} size={220} bgColor="#f8f5ff" fgColor="#0f0b1a" level="M" />
         </div>
-        <p className="text-center text-sm text-muted">Scan to join <b className="text-cloud">{day.title}</b></p>
+        <p className="text-center text-sm text-muted">Scan to join <b className="text-ink">{day.title}</b></p>
         <button onClick={copy} className="flex w-full items-center gap-3 rounded-2xl bg-surface-2 px-4 py-3 text-left">
           <span className="min-w-0 flex-1 truncate text-sm text-muted">{url}</span>
-          {copied ? <Check size={18} className="text-mint" /> : <Copy size={18} />}
+          {copied ? <Check size={18} className="text-mint-deep" /> : <Copy size={18} />}
         </button>
       </div>
     </Sheet>
@@ -111,7 +111,7 @@ export function ClockSheet({ open, onClose, nodes }) {
   const jump = (n) => { jumpTo(new Date(n.starts_at).getTime() + 5 * 60000); onClose() }
   return (
     <Sheet open={open} onClose={onClose} title="Demo clock">
-      <p className="mb-3 text-sm text-muted">Now is <b className="text-cloud">{fmtTime(now())}</b>. Jump to 5 minutes into a stop.</p>
+      <p className="mb-3 text-sm text-muted">Now is <b className="text-ink">{fmtTime(now())}</b>. Jump to 5 minutes into a stop.</p>
       <div className="space-y-2">
         {nodes.map((n) => (
           <button key={n.id} onClick={() => jump(n)} className="flex w-full items-center gap-3 rounded-2xl bg-surface-2 px-4 py-3 text-left">

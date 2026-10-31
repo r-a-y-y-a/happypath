@@ -44,7 +44,7 @@ export default function Profile() {
         </div>
       </div>
       <div className="mt-4 flex items-center justify-between">
-        <span className="rounded-full bg-surface px-3.5 py-1.5 text-sm font-semibold">
+        <span className="rounded-full bg-surface px-3.5 py-1.5 text-sm font-semibold shadow-sm shadow-amber-900/10">
           <b className="text-coral">{posts.length}</b> {posts.length === 1 ? 'moment' : 'moments'}
         </span>
         {userId === id && (
@@ -61,11 +61,11 @@ export default function Profile() {
             {posts.map((p) => (
               <motion.div key={p.id} layout initial={{ opacity: 0, scale: 0.8, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ type: 'spring', damping: 16 }}>
-                <Link to={`/profile/${id}/post/${p.id}`} className="group relative block aspect-[4/5] overflow-hidden rounded-3xl bg-surface">
+                <Link to={`/profile/${id}/post/${p.id}`} className="group relative block aspect-[4/5] overflow-hidden rounded-3xl bg-surface shadow-md shadow-amber-900/15">
                   <img src={p.photo_url} alt={p.caption || p.node.title} loading="lazy" className="h-full w-full object-cover transition group-active:scale-105" />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10">
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-10 text-white">
                     <p className="truncate text-[13px] font-bold">{p.node.emoji} {p.node.title}</p>
-                    <p className="flex items-center gap-2.5 text-[11px] text-cloud/80">
+                    <p className="flex items-center gap-2.5 text-[11px] text-white/85">
                       <span>{fmtTime(p.created_at)}</span>
                       <span className="flex items-center gap-0.5"><Heart size={11} />{p.like_count}</span>
                       <span className="flex items-center gap-0.5"><MessageCircle size={11} />{p.comment_count}</span>
@@ -117,7 +117,7 @@ export function PostDetail() {
   return (
     <div className="px-5">
       <button onClick={() => nav(-1)} className="mb-3 flex items-center gap-1 text-sm font-semibold text-muted"><ArrowLeft size={16} />Diary</button>
-      <div className="overflow-hidden rounded-[28px] bg-surface">
+      <div className="overflow-hidden rounded-[28px] bg-surface shadow-md shadow-amber-900/10">
         <div className="relative" onDoubleClick={like}>
           <img src={p.photo_url} alt={p.caption || p.node.title} className="aspect-[4/5] w-full object-cover" />
           <AnimatePresence>
@@ -126,7 +126,7 @@ export function PostDetail() {
                 className="pointer-events-none absolute inset-0 flex items-center justify-center text-coral"><Heart size={96} fill="currentColor" /></motion.div>
             )}
           </AnimatePresence>
-          <div className="absolute left-3 top-3 rounded-full bg-ink/70 px-3 py-1.5 text-xs font-bold backdrop-blur">
+          <div className="absolute left-3 top-3 rounded-full bg-cloud/85 px-3 py-1.5 text-xs font-bold text-ink shadow-sm backdrop-blur">
             {p.node.emoji} {p.node.title} · {fmtDate(p.created_at)}, {fmtTime(p.created_at)}
           </div>
         </div>
@@ -153,8 +153,8 @@ export function PostDetail() {
             <motion.li key={c.id} layout initial={{ opacity: 0, y: 14, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               className="flex gap-3">
               <Link to={`/profile/${c.author.id}`}><Avatar p={c.author} size={32} /></Link>
-              <div className="rounded-2xl bg-surface px-3.5 py-2.5">
-                <p className="text-xs text-muted"><b className="text-cloud">{c.author.display_name}</b> · {ago(c.created_at)}</p>
+              <div className="rounded-2xl bg-surface px-3.5 py-2.5 shadow-sm shadow-amber-900/10">
+                <p className="text-xs text-muted"><b className="text-ink">{c.author.display_name}</b> · {ago(c.created_at)}</p>
                 <p className="text-[15px]">{c.body}</p>
               </div>
             </motion.li>
@@ -163,7 +163,7 @@ export function PostDetail() {
         {comments.length === 0 && <li className="text-sm text-muted">Be the first to say something.</li>}
       </ul>
       {userId && (
-        <form onSubmit={send} className="sticky bottom-4 mt-5 flex gap-2 rounded-full bg-surface-2 p-1.5 shadow-2xl shadow-black/50">
+        <form onSubmit={send} className="sticky bottom-4 mt-5 flex gap-2 rounded-full bg-surface-2 p-1.5 shadow-xl shadow-amber-900/20">
           <Avatar p={me} size={40} />
           <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a comment"
             className="min-w-0 flex-1 bg-transparent px-2 text-[16px] outline-none placeholder:text-muted" />

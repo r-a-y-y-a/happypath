@@ -45,13 +45,13 @@ export default function Layout() {
   return (
     <CaptureCtx.Provider value={ctx}>
       <div className="mx-auto min-h-dvh w-full max-w-md pb-28">
-        <header className="sticky top-0 z-30 flex items-center justify-between bg-ink/80 px-5 pb-3 pt-[max(14px,env(safe-area-inset-top))] backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex items-center justify-between bg-cloud/80 px-5 pb-3 pt-[max(14px,env(safe-area-inset-top))] backdrop-blur-xl">
           <Link to="/" onClick={tapLogo} className="select-none font-display text-[26px] font-extrabold tracking-tight">
             happy<span className="bg-gradient-to-r from-coral to-amber bg-clip-text text-transparent">path</span>
           </Link>
           <div className="flex items-center gap-3">
             {isJumped() && (
-              <button onClick={() => setClockOpen(true)} className="flex items-center gap-1 rounded-full bg-mint/15 px-2.5 py-1 text-xs font-bold text-mint">
+              <button onClick={() => setClockOpen(true)} className="flex items-center gap-1 rounded-full bg-mint/30 px-2.5 py-1 text-xs font-bold text-mint-deep">
                 <Clock3 size={13} />{fmtTime(t)}
               </button>
             )}

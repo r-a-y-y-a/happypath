@@ -58,11 +58,11 @@ function NodeCard({ node, i, t, userId }) {
   return (
     <motion.li layout initial={{ opacity: 0, x: -24, scale: 0.96 }} animate={{ opacity: 1, x: 0, scale: 1 }}
       transition={{ delay: Math.min(i, 5) * 0.06, type: 'spring', damping: 20 }} className="relative pl-9">
-      <span className={`absolute left-0 top-6 flex h-[26px] w-[26px] items-center justify-center rounded-full text-sm ring-4 ring-ink ${open ? 'bg-coral' : 'bg-surface-2'}`}>
+      <span className={`absolute left-0 top-6 flex h-[26px] w-[26px] items-center justify-center rounded-full text-sm ring-4 ring-cloud ${open ? 'bg-coral' : 'bg-surface-2'}`}>
         {open && <span className="absolute inset-0 animate-ping rounded-full bg-coral/60" />}
         <span className="relative text-[13px]">{node.emoji}</span>
       </span>
-      <div className={`rounded-3xl p-4 ${open ? 'bg-gradient-to-br from-surface-2 to-surface ring-1 ring-coral/60' : 'bg-surface'} ${st === 'past' ? 'opacity-75' : ''}`}>
+      <div className={`rounded-3xl p-4 ${open ? 'bg-gradient-to-br from-surface-2 to-surface ring-1 ring-coral/60' : 'bg-surface shadow-sm shadow-amber-900/10'} ${st === 'past' ? 'opacity-75' : ''}`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h3 className="truncate font-display text-xl font-bold leading-tight">{node.title}</h3>
@@ -105,8 +105,8 @@ export default function Day() {
   if (!day) return <TimelineSkeleton />
   return (
     <div className="px-5">
-      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-coral/90 via-coral to-amber p-5 text-ink">
-        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
+      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-amber via-[#ff9d3d] to-coral p-5 text-ink shadow-xl shadow-coral/25">
+        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/50 blur-2xl" />
         <p className="text-xs font-bold uppercase tracking-widest opacity-70">{fmtDate(day.date + 'T12:00:00')}</p>
         <h1 className="mt-1 font-display text-[30px] font-extrabold leading-tight">{day.title}</h1>
         <div className="mt-4 flex items-center justify-between">
@@ -130,7 +130,7 @@ export default function Day() {
 
       <div className="mt-6 flex justify-center pb-10">
         <motion.button whileTap={{ scale: 0.95 }} onClick={() => setAddOpen(true)} aria-label="Add a stop"
-          className="flex h-12 items-center gap-2 rounded-full bg-cloud px-6 font-bold text-ink shadow-xl shadow-black/40">
+          className="flex h-12 items-center gap-2 rounded-full bg-ink px-6 font-bold text-cloud shadow-xl shadow-amber-900/30">
           <Plus size={20} />Add a stop
         </motion.button>
       </div>
