@@ -98,7 +98,7 @@ export default function TravelLeg({ from, to }) {
                 </li>
               )
             })}
-            <li className="px-3 pb-1 text-[10px] text-muted">Routes from OneMap Singapore, using the stop's departure time.{shuttle ? ` ${shuttle.note}` : ''}</li>
+            <li className="px-3 pb-1 text-[10px] text-muted">Routes from OneMap Singapore.{shuttle ? ` ${shuttle.note}` : ''}</li>
           </motion.ul>
         )}
       </AnimatePresence>
