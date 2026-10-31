@@ -118,10 +118,12 @@ export default function Day() {
         )}
         <div className="mt-4 flex items-center justify-between">
           <AvatarStack people={day.members} size={34} max={5} />
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setInviteOpen(true)}
-            className="flex h-10 items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-bold text-cloud">
-            <UserPlus size={16} />Invite friends
-          </motion.button>
+          {day.members.some((m) => m.id === userId) && (
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setInviteOpen(true)}
+              className="flex h-10 items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-bold text-cloud">
+              <UserPlus size={16} />Invite friends
+            </motion.button>
+          )}
         </div>
       </div>
 

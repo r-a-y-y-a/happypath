@@ -22,6 +22,7 @@ Errors are `{ "error": "message" }` with a 4xx or 5xx status.
 | Method and path | Body | Returns |
 |---|---|---|
 | GET `/api/health` | | `{ ok, supabase }` |
+| GET `/api/profiles?q=` | | `(Profile & { is_friend })[]`, up to 30 people other than the caller whose name contains `q`, all of them when `q` is empty |
 | PUT `/api/profiles/me` | `{ display_name, avatar_url?, bio? }` | profile |
 | GET `/api/profiles/:id` | | profile |
 | GET `/api/profiles/:id/diary` | | `{ profile, posts: Post[] }`, newest first |
@@ -68,3 +69,13 @@ The same tables are public to read.
 Defined in `src/index.css` under `@theme`.
 Display font is Fraunces and body font is Plus Jakarta Sans, loaded in `index.html`.
 Mobile first, and the layout is designed at 390px wide.
+
+## App navigation
+A bottom bar with four tabs. Each tab is a route, and every screen renders inside `Layout`.
+| Tab | Route | Screen |
+|---|---|---|
+| My day | `/` (then `/day/:id`) | the caller's current day |
+| Friends' days | `/friends` | each friend's latest day, tapping opens `/day/:id` |
+| Social | `/social` | all friends as profile cards (tap opens `/profile/:id`) and a search to add people with `GET /api/profiles?q=` and `POST /api/friends/:id` |
+| Account | `/account` | edit name and bio with `PUT /api/profiles/me`, day or night theme, link to the caller's diary, sign out |
+Links that leave a tab pass `state={{ from: 'friends' | 'social' | 'account' }}` so the bar keeps the right tab highlighted.
