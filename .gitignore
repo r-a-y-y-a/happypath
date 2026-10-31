@@ -1,0 +1,6 @@
+.hack/
+node_modules/
+.env
+.env.*
+.vercel/
+dist/
