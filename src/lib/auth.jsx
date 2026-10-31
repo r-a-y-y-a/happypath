@@ -12,7 +12,17 @@ export function AuthProvider({ children }) {
 
   const loadProfile = useCallback(async (id) => {
     if (!id) { setProfile(null); return }
-    try { setProfile(await get(`/profiles/${id}`)) } catch { setProfile(null) }
+    try { setProfile(await get(`/profiles/${id}`)); return } catch { /* no profile yet */ }
+    // First Google sign-in: build the profile from the Google account.
+    try {
+      const { data } = await supabase.auth.getUser()
+      const m = data?.user?.user_metadata || {}
+      const name = (m.full_name || m.name || data?.user?.email?.split('@')[0] || '').trim().slice(0, 30)
+      if (!name) { setProfile(null); return }
+      const row = { display_name: name }
+      if (m.avatar_url || m.picture) row.avatar_url = m.avatar_url || m.picture
+      setProfile(await put('/profiles/me', row))
+    } catch { setProfile(null) }
   }, [])
 
   useEffect(() => {
@@ -26,9 +36,10 @@ export function AuthProvider({ children }) {
       const id = data.session?.user?.id || null
       setUserId(id); loadProfile(id)
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => {
       const id = s?.user?.id || null
       setUserId(id)
+      if (e === 'SIGNED_IN' && id) setTimeout(() => loadProfile(id), 0)
     })
     return () => sub.subscription.unsubscribe()
   }, [loadProfile])
@@ -39,6 +50,13 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email: 'maya@happypath.demo', password: 'happypath-demo' })
     if (error) throw error
     setUserId(data.user.id); await loadProfile(data.user.id)
+  }
+
+  // Redirects to Google and back to this same page (so an invite link keeps its /join/<day> path).
+  const googleLogin = async () => {
+    if (MOCK || !supabase) throw new Error('Google sign-in needs Supabase')
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } })
+    if (error) throw error
   }
 
   const guestLogin = async (name) => {
@@ -67,7 +85,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <Ctx.Provider value={{ userId, profile, demoLogin, guestLogin, signOut, saveProfile, loading: userId === undefined }}>
+    <Ctx.Provider value={{ userId, profile, demoLogin, guestLogin, googleLogin, signOut, saveProfile, loading: userId === undefined }}>
       {children}
     </Ctx.Provider>
   )

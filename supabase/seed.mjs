@@ -56,6 +56,16 @@ const at = (date, hhmm) => new Date(`${date}T${hhmm}:00+08:00`).toISOString()
 // Post and comment times are never in the future, so a post created live during the demo always sorts above the seeded ones.
 const postAt = (date, hhmm) => new Date(Math.min(new Date(`${date}T${hhmm}:00+08:00`).getTime(), Date.now() - 60000)).toISOString()
 
+// A stop that is open for photos whenever the seed runs: it started an hour ago (on the half hour) and runs for 3 more hours,
+// kept between the climb (ends 15:00) and dinner (starts 20:00) so judges who join Maya's day can post to it straight away.
+function openWindow() {
+  const hhmm = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`
+  const [h, m] = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()).split(':').map(Number)
+  const now = h * 60 + m
+  const from = Math.max(15 * 60, Math.min(Math.floor((now - 60) / 30) * 30, 18 * 60))
+  return { from: hhmm(from), to: hhmm(Math.min(Math.max(from + 180, now + 90), 19 * 60 + 30)) }
+}
+
 async function checkUrls() {
   const urls = [...Object.values(PHOTOS), ...Object.values(PEOPLE).map((p) => p.avatar)]
   const bad = []
@@ -189,6 +199,7 @@ async function main() {
   const { date: today } = await seedDay({ owner: maya, shift: 0, title: 'Saturday in the city', nodes: [
     { title: 'Brunch at Common Man', venue: 'Common Man Stan', emoji: '🥐', from: '10:00', to: '11:30', photo: PHOTOS.brunch, caption: 'Brunch first, plans second.', at: '10:25', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a plate next time!'], [priya, 'Those eggs 😍']] },
     { title: 'Climb session at Boulder Planet', venue: 'Boulder Planet Sembawang', emoji: '🧗', from: '13:00', to: '15:00' },
+    { title: 'Golden hour coffee', venue: 'Tiong Bahru Bakery', emoji: '☕', ...openWindow() },
     { title: 'Dinner at Lau Pa Sat', venue: 'Lau Pa Sat', emoji: '🍢', from: '20:00', to: '21:30' },
   ] })
 
