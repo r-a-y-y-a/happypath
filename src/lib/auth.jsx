@@ -59,8 +59,15 @@ export function AuthProvider({ children }) {
     setUserId(null); setProfile(null)
   }
 
+  // Saves name and bio, then updates the shared profile so every screen reflects it at once.
+  const saveProfile = async ({ display_name, bio }) => {
+    const saved = await put('/profiles/me', { display_name: display_name.trim(), bio: bio.trim() })
+    setProfile(saved)
+    return saved
+  }
+
   return (
-    <Ctx.Provider value={{ userId, profile, demoLogin, guestLogin, signOut, loading: userId === undefined }}>
+    <Ctx.Provider value={{ userId, profile, demoLogin, guestLogin, signOut, saveProfile, loading: userId === undefined }}>
       {children}
     </Ctx.Provider>
   )
