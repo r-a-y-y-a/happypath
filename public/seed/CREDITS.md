@@ -21,3 +21,8 @@ Each line is the local file, the Commons page and the licence.
 - sunset.jpg - Marina Bay, Singapore, at sunset - 20140707.jpg by Kroisenbrunner. (CC BY-SA 4.0) - https://commons.wikimedia.org/wiki/File:Marina_Bay,_Singapore,_at_sunset_-_20140707.jpg
 - shore.jpg - Sunrise at East Coast Park, Singapore - 20091017.jpg by Adhirk at English Wikipedia (Adhir Kirtikar). (CC BY-SA 3.0) - https://commons.wikimedia.org/wiki/File:Sunrise_at_East_Coast_Park,_Singapore_-_20091017.jpg
 - brunch.jpg - Unsplash photo 1504754524776-8f4f37790ca0 (Unsplash licence)
+- hack-night.jpg - Junction 2015.jpg by Vmuru (CC BY-SA 4.0) - https://commons.wikimedia.org/wiki/File:Junction_2015.jpg
+- hack-bot.jpg - VEX Robotics Competition Robot with Cap.jpg by Noah Wulf (CC BY-SA 4.0) - https://commons.wikimedia.org/wiki/File:VEX_Robotics_Competition_Robot_with_Cap.jpg
+- hack-pair.jpg - Wikimania 2026. Le Loft (01597).JPG by Francesco Tosoni (CC BY-SA 4.0) - https://commons.wikimedia.org/wiki/File:Wikimania_2026._Le_Loft_(01597).JPG
+- hack-hall.jpg - First BGSU Hackathon Awards Ceremony.jpg by Mbrickn (CC0) - https://commons.wikimedia.org/wiki/File:First_BGSU_Hackathon_Awards_Ceremony.jpg
+- hack-debate.jpg - Wikimania 2026. Le Loft (01595).JPG by Francesco Tosoni (CC BY-SA 4.0) - https://commons.wikimedia.org/wiki/File:Wikimania_2026._Le_Loft_(01595).JPG

@@ -36,6 +36,11 @@ const PHOTOS = {
   climbCrew: photo('climb-crew'),
   climbJun: photo('climb-jun'),
   climbNew: photo('climb-new'),
+  hackNight: photo('hack-night'),
+  hackBot: photo('hack-bot'),
+  hackPair: photo('hack-pair'),
+  hackHall: photo('hack-hall'),
+  hackDebate: photo('hack-debate'),
   climbPriya: photo('climb-priya'),
   ubinBike: photo('ubin-bike'),
   ubinCrab: photo('ubin-crab'),
@@ -159,7 +164,7 @@ async function main() {
     const [day] = await insert('days', { owner_id: owner, title, date })
     await insert('day_members', [owner, ...members].map((user_id) => ({ day_id: day.id, user_id })))
     for (const n of nodes) {
-      const [node] = await insert('nodes', { day_id: day.id, owner_id: owner, title: n.title, venue: n.venue, emoji: n.emoji, starts_at: when(date, n.from), ends_at: when(date, n.to) })
+      const [node] = await insert('nodes', { day_id: day.id, owner_id: owner, title: n.title, venue: n.venue, emoji: n.emoji, starts_at: when(date, n.from), ends_at: when(date, n.to), ...(n.lat ? { lat: n.lat, lng: n.lng } : {}) })
       await insert('node_members', [...new Set([owner, ...members, ...(n.with || [])])].map((user_id) => ({ node_id: node.id, user_id })))
       // A stop has one photo of its own, or several from different people.
       for (const q of n.posts || (n.photo ? [n] : [])) {
@@ -202,19 +207,26 @@ async function main() {
   ] })
 
   // Today is Maya's alone: nobody else is on the day until a judge joins live in the demo.
-  // The climb is running right now (started 45 minutes ago) with photos already from Maya, Jun and Priya,
+  // Autonomous Hack @ Acacia is running right now (started 40 minutes ago) with photos already from Maya, Jun and Priya,
   // so a judge who scans the QR can post their own moment into it straight away.
   const weekday = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'long' }).format(NOW)
   const { date: today } = await seedDay({ owner: maya, shift: 0, title: `${weekday} in the city`, nodes: [
-    { title: 'Brunch at Common Man', venue: 'Common Man Stan', emoji: '🥐', from: -300, to: -210, photo: PHOTOS.brunch, caption: 'Brunch first, plans second.', at: -240, who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a plate next time!'], [priya, 'Those eggs 😍']] },
-    { title: 'Climb session at Boulder Planet', venue: 'Boulder Planet Sembawang', emoji: '🧗', from: -45, to: 75, with: [jun, priya], posts: [
-      { photo: PHOTOS.climbWall, caption: 'The project wall for today. Wish me luck.', at: -36, who: maya, likes: [jun, priya, daniel], comments: [[jun, 'That purple route is mine'], [daniel, 'Send it!']] },
-      { photo: PHOTOS.climbJun, caption: 'Warm-up done, fingers already cooked.', at: -26, who: jun, likes: [maya, priya], comments: [[maya, 'Show off 😂']] },
-      { photo: PHOTOS.climbPriya, caption: 'Slab days are the best days.', at: -17, who: priya, likes: [maya, jun, daniel], comments: [[maya, 'That form!!'], [jun, 'Okay Priya, calm down']] },
-      { photo: PHOTOS.climbCrew, caption: 'Rest between attempts. Chalk everywhere.', at: -9, who: maya, likes: [jun, priya] },
-      { photo: PHOTOS.climbNew, caption: 'New routes just got set 👀', at: -4, who: jun, likes: [maya, priya, daniel], comments: [[priya, 'I call the yellow one']] },
+    { title: 'Brunch at Common Man', venue: 'Common Man Stan', emoji: '🥐', from: -420, to: -330, photo: PHOTOS.brunch, caption: 'Brunch first, plans second.', at: -370, who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a plate next time!'], [priya, 'Those eggs 😍']] },
+    { title: 'Climb session at Boulder Planet', venue: 'Boulder Planet Sembawang', emoji: '🧗', from: -250, to: -130, with: [jun, priya], posts: [
+      { photo: PHOTOS.climbWall, caption: 'The project wall for today. Wish me luck.', at: -230, who: maya, likes: [jun, priya, daniel], comments: [[jun, 'That purple route is mine'], [daniel, 'Send it!']] },
+      { photo: PHOTOS.climbJun, caption: 'Warm-up done, fingers already cooked.', at: -215, who: jun, likes: [maya, priya], comments: [[maya, 'Show off 😂']] },
+      { photo: PHOTOS.climbPriya, caption: 'Slab days are the best days.', at: -200, who: priya, likes: [maya, jun, daniel], comments: [[maya, 'That form!!'], [jun, 'Okay Priya, calm down']] },
+      { photo: PHOTOS.climbCrew, caption: 'Rest between attempts. Chalk everywhere.', at: -170, who: maya, likes: [jun, priya] },
+      { photo: PHOTOS.climbNew, caption: 'New routes just got set 👀', at: -150, who: jun, likes: [maya, priya, daniel], comments: [[priya, 'I call the yellow one']] },
     ] },
-    { title: 'Dinner at Lau Pa Sat', venue: 'Lau Pa Sat', emoji: '🍢', from: 180, to: 270 },
+    { title: 'Autonomous Hack @ Acacia', venue: 'Acacia College', emoji: '🤖', lat: 1.3067783, lng: 103.7733147, from: -40, to: 150, with: [jun, priya], posts: [
+      { photo: PHOTOS.hackNight, caption: 'Kickoff energy is unreal. Laptops out, agents loading.', at: -34, who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Table by the window is ours'], [daniel, 'Ship it before the demo!']] },
+      { photo: PHOTOS.hackBot, caption: 'First autonomous run. It drove straight into a wall. Progress.', at: -27, who: jun, likes: [maya, priya, daniel], comments: [[maya, 'Add a sensor? 😂']] },
+      { photo: PHOTOS.hackPair, caption: 'Pair debugging. Send coffee.', at: -19, who: priya, likes: [maya, jun], comments: [[maya, 'On my way with kopi']] },
+      { photo: PHOTOS.hackHall, caption: 'The whole hall is locked in.', at: -11, who: maya, likes: [jun, priya] },
+      { photo: PHOTOS.hackDebate, caption: 'Architecture debate, round three.', at: -5, who: jun, likes: [maya, priya, daniel], comments: [[priya, 'Just use the queue!']] },
+    ] },
+    { title: 'Dinner at Lau Pa Sat', venue: 'Lau Pa Sat', emoji: '🍢', from: 200, to: 290 },
   ] })
 
   await seedFriends({ maya, jun, priya, daniel })
