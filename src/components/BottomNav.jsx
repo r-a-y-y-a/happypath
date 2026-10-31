@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
-import { CalendarDays, Compass, UserRound, Users } from 'lucide-react'
+import { CalendarDays, Sun, UserRound, Users } from 'lucide-react'
 
 const TABS = [
   { id: 'day', to: '/', label: 'My day', Icon: CalendarDays },
-  { id: 'friends', to: '/friends', label: "Friends' days", Icon: Compass },
+  { id: 'friends', to: '/friends', label: 'Today', Icon: Sun },
   { id: 'social', to: '/social', label: 'Social', Icon: Users },
   { id: 'account', to: '/account', label: 'Account', Icon: UserRound },
 ]

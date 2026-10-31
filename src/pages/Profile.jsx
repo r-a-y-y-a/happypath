@@ -150,7 +150,7 @@ export function PostDetail() {
   }
   return (
     <div className="px-5">
-      <button onClick={() => nav(-1)} className="mb-3 flex items-center gap-1 text-sm font-semibold text-muted"><ArrowLeft size={16} />Diary</button>
+      <button onClick={() => nav(-1)} className="mb-3 flex items-center gap-1 text-sm font-semibold text-muted"><ArrowLeft size={16} />Back</button>
       <div className="overflow-hidden rounded-[28px] bg-surface shadow-md shadow-amber-900/10">
         <div className="relative" onDoubleClick={like}>
           <img src={p.photo_url} alt={p.caption || p.node.title} className="aspect-[4/5] w-full object-cover" />

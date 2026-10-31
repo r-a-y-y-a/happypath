@@ -5,6 +5,7 @@ import SignIn from './pages/SignIn'
 import Join from './pages/Join'
 import Day, { Home } from './pages/Day'
 import Profile, { PostDetail } from './pages/Profile'
+import Activity from './pages/Activity'
 import Friends from './pages/Friends'
 import Social from './pages/Social'
 import Account from './pages/Account'
@@ -26,6 +27,7 @@ export default function App() {
           <Route element={<Gate><Layout /></Gate>}>
             <Route path="/" element={<Home />} />
             <Route path="/day/:id" element={<Day />} />
+            <Route path="/node/:id" element={<Activity />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/social" element={<Social />} />
             <Route path="/account" element={<Account />} />

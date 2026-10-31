@@ -1,6 +1,9 @@
 // Seeds the demo data. Also the reset-demo script: re-running wipes the four demo users' rows and recreates them.
 // Run with: npm run seed
+// Today's days are anchored to the moment the seed runs (Maya's climb is live right now, friends have finished stops behind them),
+// so run it shortly before presenting.
 import { createClient } from '@supabase/supabase-js'
+import { existsSync } from 'node:fs'
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -11,7 +14,8 @@ const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persi
 
 const PASSWORD = 'happypath-demo'
 const TZ = 'Asia/Singapore'
-const img = (id) => `https://images.unsplash.com/photo-${id}?w=1280&q=80&auto=format&fit=crop`
+// Photos are static files in public/seed (see CREDITS.md there), served by the app itself, so the demo never hotlinks a third party.
+const photo = (name) => `/seed/${name}.jpg`
 
 const PEOPLE = {
   maya: { name: 'Maya', email: 'maya@happypath.demo', avatar: 'https://i.pravatar.cc/300?img=47', bio: 'Brunch first, plans second. Collecting golden hours around the city.' },
@@ -21,20 +25,24 @@ const PEOPLE = {
 }
 
 const PHOTOS = {
-  brunch: img('1504754524776-8f4f37790ca0'),
-  climb: img('1522163182402-834f871fd851'),
-  coffee: img('1495474472287-4d71bcdd2085'),
-  run: img('1476480862126-209bfaa8edc8'),
-  beach: img('1507525428034-b723cf961d3e'),
-  dinner: img('1414235077428-338989a2e8c0'),
-  hike: img('1506905925346-21bda4d32df4'),
-  ramen: img('1540189549336-e6e99c3679fe'),
-  bike: img('1485965120184-e220f721d03e'),
-  ubinLunch: img('1504674900247-0877df9cc836'),
-  pancakes: img('1567620905732-2d1ec7ab7445'),
-  hawker: img('1555396273-367ea4eb4db5'),
-  sunset: img('1472214103451-9374bd1c798e'),
-  shore: img('1500375592092-40eb2168fd21'),
+  brunch: photo('brunch'),
+  pastry: photo('pastry'),
+  run: photo('run'),
+  beach: photo('beach'),
+  newton: photo('newton'),
+  hike: photo('hike'),
+  ramen: photo('ramen'),
+  climbWall: photo('climb-wall'),
+  climbCrew: photo('climb-crew'),
+  climbJun: photo('climb-jun'),
+  climbNew: photo('climb-new'),
+  climbPriya: photo('climb-priya'),
+  ubinBike: photo('ubin-bike'),
+  ubinCrab: photo('ubin-crab'),
+  kaya: photo('kaya'),
+  chickenRice: photo('chickenrice'),
+  sunset: photo('sunset'),
+  shore: photo('shore'),
 }
 
 const must = ({ data, error }, what) => {
@@ -53,11 +61,17 @@ const sgDate = (shift = 0) => {
   return d.toISOString().slice(0, 10)
 }
 const at = (date, hhmm) => new Date(`${date}T${hhmm}:00+08:00`).toISOString()
-// Post and comment times are never in the future, so a post created live during the demo always sorts above the seeded ones.
-const postAt = (date, hhmm) => new Date(Math.min(new Date(`${date}T${hhmm}:00+08:00`).getTime(), Date.now() - 60000)).toISOString()
+// Today's stops are given in minutes from the moment the seed runs (negative is earlier). Past days use HH:MM.
+const NOW = Date.now()
+const rel = (min) => new Date(NOW + min * 60000).toISOString()
+const when = (date, v) => (typeof v === 'number' ? rel(v) : at(date, v))
+// Posts and comments are never in the future, so a photo posted live during the demo always sorts above the seeded ones.
+const stamp = (date, v, plusMin = 0) => new Date(Math.min(new Date(when(date, v)).getTime() + plusMin * 60000, NOW - 30000)).toISOString()
 
 async function checkUrls() {
-  const urls = [...Object.values(PHOTOS), ...Object.values(PEOPLE).map((p) => p.avatar)]
+  const missing = Object.values(PHOTOS).filter((p) => !existsSync(new URL(`../public${p}`, import.meta.url)))
+  if (missing.length) throw new Error(`Seed photos missing from public/seed:\n${missing.join('\n')}`)
+  const urls = Object.values(PEOPLE).map((p) => p.avatar)
   const bad = []
   await Promise.all(urls.map(async (u) => {
     const r = await fetch(u, { method: 'GET' }).catch(() => null)
@@ -145,56 +159,67 @@ async function main() {
     const [day] = await insert('days', { owner_id: owner, title, date })
     await insert('day_members', [owner, ...members].map((user_id) => ({ day_id: day.id, user_id })))
     for (const n of nodes) {
-      const [node] = await insert('nodes', { day_id: day.id, owner_id: owner, title: n.title, venue: n.venue, emoji: n.emoji, starts_at: at(date, n.from), ends_at: at(date, n.to) })
+      const [node] = await insert('nodes', { day_id: day.id, owner_id: owner, title: n.title, venue: n.venue, emoji: n.emoji, starts_at: when(date, n.from), ends_at: when(date, n.to) })
       await insert('node_members', [...new Set([owner, ...members, ...(n.with || [])])].map((user_id) => ({ node_id: node.id, user_id })))
-      if (!n.photo) continue
-      const [post] = await insert('posts', { node_id: node.id, author_id: n.who, photo_path: n.photo, caption: n.caption, created_at: postAt(date, n.at) })
-      await insert('likes', n.likes.map((user_id) => ({ post_id: post.id, user_id })))
-      await insert('comments', n.comments.map(([author_id, body], i) => ({ post_id: post.id, author_id, body, created_at: postAt(date, n.at.replace(/:\d\d$/, `:${String(10 + i * 7).padStart(2, '0')}`)) })))
+      // A stop has one photo of its own, or several from different people.
+      for (const q of n.posts || (n.photo ? [n] : [])) {
+        const [post] = await insert('posts', { node_id: node.id, author_id: q.who, photo_path: q.photo, caption: q.caption, created_at: stamp(date, q.at) })
+        await insert('likes', q.likes.map((user_id) => ({ post_id: post.id, user_id })))
+        if (q.comments?.length) await insert('comments', q.comments.map(([author_id, body], i) => ({ post_id: post.id, author_id, body, created_at: stamp(date, q.at, 6 * (i + 1)) })))
+      }
     }
     return { day, date }
   }
 
   // Maya's past days. Jun joins only the stops marked `with`.
   await seedDay({ owner: maya, shift: -2, title: 'Slow Sunday', nodes: [
-    { title: 'Coffee at Tiong Bahru Bakery', venue: 'Tiong Bahru Bakery', emoji: '☕', from: '09:00', to: '10:30', with: [jun], photo: PHOTOS.coffee, caption: 'Flat white and a kouign-amann. Sunday sorted.', at: '09:40', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a bite next time!'], [priya, 'That pastry 😍']] },
+    { title: 'Coffee at Tiong Bahru Bakery', venue: 'Tiong Bahru Bakery', emoji: '☕', from: '09:00', to: '10:30', with: [jun], photo: PHOTOS.pastry, caption: 'Flat white and a kouign-amann. Sunday sorted.', at: '09:40', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a bite next time!'], [priya, 'That pastry 😍']] },
     { title: 'Run at East Coast Park', venue: 'East Coast Park', emoji: '🏃', from: '17:00', to: '18:30', photo: PHOTOS.run, caption: '10k done, legs gone.', at: '17:50', who: maya, likes: [jun, daniel, priya], comments: [[daniel, 'Pace?? Respect.']] },
   ] })
   await seedDay({ owner: maya, shift: -5, title: 'Beach day', nodes: [
     { title: 'Sentosa beach hangout', venue: 'Palawan Beach', emoji: '🏖️', from: '11:00', to: '14:00', photo: PHOTOS.beach, caption: 'Pretending this is a holiday.', at: '12:15', who: maya, likes: [jun, priya, daniel], comments: [[priya, 'Take me back'], [daniel, 'Best day of the month']] },
-    { title: 'Dinner at Newton', venue: 'Newton Food Centre', emoji: '🍢', from: '19:00', to: '21:00', photo: PHOTOS.dinner, caption: 'Sambal stingray, no regrets.', at: '19:45', who: maya, likes: [jun, priya], comments: [[priya, 'The stingray!!']] },
+    { title: 'Dinner at Newton', venue: 'Newton Food Centre', emoji: '🍢', from: '19:00', to: '21:00', photo: PHOTOS.newton, caption: 'Sambal stingray, no regrets.', at: '19:45', who: maya, likes: [jun, priya], comments: [[priya, 'The stingray!!']] },
   ] })
   await seedDay({ owner: maya, shift: -9, title: 'Hike and ramen', nodes: [
     { title: 'MacRitchie treetop walk', venue: 'MacRitchie Reservoir', emoji: '🥾', from: '07:30', to: '10:00', with: [jun], photo: PHOTOS.hike, caption: 'Up before the sun for this.', at: '08:20', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Worth the 6am alarm'], [priya, 'Gorgeous light']] },
     { title: 'Ramen night', venue: 'Ippudo Tanjong Pagar', emoji: '🍜', from: '19:30', to: '21:00', photo: PHOTOS.ramen, caption: 'Extra noodles, always.', at: '20:05', who: maya, likes: [jun, priya, daniel], comments: [[daniel, 'Kae-dama gang']] },
   ] })
 
-  // Each friend's own trips, none shared with Maya.
-  await seedDay({ owner: jun, shift: -1, title: 'Pulau Ubin ride', nodes: [
-    { title: 'Bike the Ubin trails', venue: 'Pulau Ubin', emoji: '🚲', from: '09:00', to: '11:30', photo: PHOTOS.bike, caption: 'Mud, mangroves and zero signal.', at: '10:15', who: jun, likes: [maya, daniel], comments: [[maya, 'Next time I am coming with you'], [daniel, 'Your chain fell off twice 😂']] },
-    { title: 'Seafood lunch at Ubin', venue: 'Ubin Town', emoji: '🦀', from: '12:00', to: '13:30', photo: PHOTOS.ubinLunch, caption: 'Earned every bite.', at: '12:40', who: jun, likes: [maya, priya], comments: [[priya, 'Chilli crab??']] },
+  // Friends' days are today too, so the Today tab shows what everyone is up to right now.
+  // Times are minutes from now: finished stops with photos behind them, and one stop still to come.
+  await seedDay({ owner: jun, shift: 0, title: 'Pulau Ubin ride', nodes: [
+    { title: 'Bike the Ubin trails', venue: 'Pulau Ubin', emoji: '🚲', from: -420, to: -300, photo: PHOTOS.ubinBike, caption: 'Mud, mangroves and zero signal.', at: -330, who: jun, likes: [maya, daniel], comments: [[maya, 'Next time I am coming with you'], [daniel, 'Your chain fell off twice 😂']] },
+    { title: 'Chilli crab lunch at Ubin', venue: 'Ubin Town', emoji: '🦀', from: -280, to: -190, photo: PHOTOS.ubinCrab, caption: 'Earned every bite.', at: -230, who: jun, likes: [maya, priya], comments: [[priya, 'Save me the claws!!']] },
   ] })
-  await seedDay({ owner: priya, shift: -3, title: 'Hawker crawl', nodes: [
-    { title: 'Breakfast at Tiong Bahru Market', venue: 'Tiong Bahru Market', emoji: '🥞', from: '08:00', to: '09:30', photo: PHOTOS.pancakes, caption: 'Kaya toast, then a second breakfast.', at: '08:35', who: priya, likes: [maya, jun, daniel], comments: [[maya, 'The queue was worth it?']] },
-    { title: 'Lunch at Maxwell', venue: 'Maxwell Food Centre', emoji: '🍜', from: '12:00', to: '13:30', photo: PHOTOS.hawker, caption: 'Chicken rice, obviously.', at: '12:30', who: priya, likes: [maya, daniel], comments: [[daniel, 'Tian Tian or not?']] },
+  await seedDay({ owner: priya, shift: 0, title: 'Hawker crawl', nodes: [
+    { title: 'Breakfast at Tiong Bahru Market', venue: 'Tiong Bahru Market', emoji: '🥞', from: -400, to: -310, photo: PHOTOS.kaya, caption: 'Kaya toast, soft eggs, kopi. Second breakfast loading.', at: -350, who: priya, likes: [maya, jun, daniel], comments: [[maya, 'The queue was worth it?']] },
+    { title: 'Chicken rice at Maxwell', venue: 'Maxwell Food Centre', emoji: '🍗', from: -240, to: -120, photo: PHOTOS.chickenRice, caption: 'Chicken rice, obviously.', at: -190, who: priya, likes: [maya, daniel], comments: [[daniel, 'Tian Tian or not?']] },
+    { title: 'Satay at Lau Pa Sat', venue: 'Lau Pa Sat', emoji: '🍢', from: 180, to: 270 },
   ] })
-  await seedDay({ owner: daniel, shift: -6, title: 'Sunset by the sea', nodes: [
-    { title: 'Sunset at Marina Barrage', venue: 'Marina Barrage', emoji: '🌅', from: '18:00', to: '19:30', photo: PHOTOS.sunset, caption: 'Chasing the last light.', at: '18:45', who: daniel, likes: [maya, jun, priya], comments: [[maya, 'Golden hour king']] },
-    { title: 'Shoreline walk', venue: 'East Coast Park', emoji: '🌊', from: '19:45', to: '21:00', photo: PHOTOS.shore, caption: 'Breeze, waves, nothing else.', at: '20:15', who: daniel, likes: [maya, priya], comments: [[priya, 'So calm']] },
+  await seedDay({ owner: daniel, shift: 0, title: 'By the bay', nodes: [
+    { title: 'Marina Barrage lookout', venue: 'Marina Barrage', emoji: '🌅', from: -200, to: -110, photo: PHOTOS.sunset, caption: 'The bay looks unreal today.', at: -150, who: daniel, likes: [maya, jun, priya], comments: [[maya, 'Golden hour king']] },
+    { title: 'Shoreline walk', venue: 'East Coast Park', emoji: '🌊', from: -90, to: 30, photo: PHOTOS.shore, caption: 'Fishermen, breeze, nothing else.', at: -40, who: daniel, likes: [maya, priya], comments: [[priya, 'So calm']] },
   ] })
 
-  // Today: Saturday in the city. The sunset node is created live in the demo, so it is not seeded.
-  // Today's day is Maya's alone: nobody else is a member or on a stop until a guest joins live in the demo.
-  // Friends can still like and comment on her brunch photo, because diaries are public.
-  const { date: today } = await seedDay({ owner: maya, shift: 0, title: 'Saturday in the city', nodes: [
-    { title: 'Brunch at Common Man', venue: 'Common Man Stan', emoji: '🥐', from: '10:00', to: '11:30', photo: PHOTOS.brunch, caption: 'Brunch first, plans second.', at: '10:25', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a plate next time!'], [priya, 'Those eggs 😍']] },
-    { title: 'Climb session at Boulder Planet', venue: 'Boulder Planet Sembawang', emoji: '🧗', from: '13:00', to: '15:00' },
-    { title: 'Dinner at Lau Pa Sat', venue: 'Lau Pa Sat', emoji: '🍢', from: '20:00', to: '21:30' },
+  // Today is Maya's alone: nobody else is on the day until a judge joins live in the demo.
+  // The climb is running right now (started 45 minutes ago) with photos already from Maya, Jun and Priya,
+  // so a judge who scans the QR can post their own moment into it straight away.
+  const weekday = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'long' }).format(NOW)
+  const { date: today } = await seedDay({ owner: maya, shift: 0, title: `${weekday} in the city`, nodes: [
+    { title: 'Brunch at Common Man', venue: 'Common Man Stan', emoji: '🥐', from: -300, to: -210, photo: PHOTOS.brunch, caption: 'Brunch first, plans second.', at: -240, who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a plate next time!'], [priya, 'Those eggs 😍']] },
+    { title: 'Climb session at Boulder Planet', venue: 'Boulder Planet Sembawang', emoji: '🧗', from: -45, to: 75, with: [jun, priya], posts: [
+      { photo: PHOTOS.climbWall, caption: 'The project wall for today. Wish me luck.', at: -36, who: maya, likes: [jun, priya, daniel], comments: [[jun, 'That purple route is mine'], [daniel, 'Send it!']] },
+      { photo: PHOTOS.climbJun, caption: 'Warm-up done, fingers already cooked.', at: -26, who: jun, likes: [maya, priya], comments: [[maya, 'Show off 😂']] },
+      { photo: PHOTOS.climbPriya, caption: 'Slab days are the best days.', at: -17, who: priya, likes: [maya, jun, daniel], comments: [[maya, 'That form!!'], [jun, 'Okay Priya, calm down']] },
+      { photo: PHOTOS.climbCrew, caption: 'Rest between attempts. Chalk everywhere.', at: -9, who: maya, likes: [jun, priya] },
+      { photo: PHOTOS.climbNew, caption: 'New routes just got set 👀', at: -4, who: jun, likes: [maya, priya, daniel], comments: [[priya, 'I call the yellow one']] },
+    ] },
+    { title: 'Dinner at Lau Pa Sat', venue: 'Lau Pa Sat', emoji: '🍢', from: 180, to: 270 },
   ] })
 
   await seedFriends({ maya, jun, priya, daniel })
 
-  console.log(`${guests === null ? '' : `Removed ${guests} guest accounts. `}Seeded: 4 users, 7 days (3 past + 3 friend trips + Saturday ${today}).`)
+  console.log(`${guests === null ? '' : `Removed ${guests} guest accounts. `}Seeded: 4 users, 7 days (3 of Maya's past, 3 friend days today, Maya's live day ${today}).`)
 }
 
 main().catch((e) => {

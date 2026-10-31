@@ -57,8 +57,9 @@ async function profileMap(sb, ids) {
   return Object.fromEntries(data.map((p) => [p.id, p]))
 }
 
+// Seed photos are static files served by the app itself (a path starting with /), uploads live in Storage.
 const photoUrl = (sb, path) =>
-  /^http/i.test(path) ? path : sb.storage.from('posts').getPublicUrl(path).data.publicUrl
+  /^(http|\/)/i.test(path) ? path : sb.storage.from('posts').getPublicUrl(path).data.publicUrl
 
 // Nodes include every day member (they are in all nodes) plus anyone who joined the node on its own.
 async function buildNodes(sb, rows) {
@@ -68,7 +69,7 @@ async function buildNodes(sb, rows) {
   const [nm, dm, posts] = await Promise.all([
     sb.from('node_members').select('node_id, user_id').in('node_id', nodeIds),
     sb.from('day_members').select('day_id, user_id').in('day_id', dayIds),
-    sb.from('posts').select('node_id').in('node_id', nodeIds),
+    sb.from('posts').select('node_id, photo_path, created_at').in('node_id', nodeIds).order('created_at', { ascending: false }),
   ])
   check(nm)
   check(dm)
@@ -92,6 +93,7 @@ async function buildNodes(sb, rows) {
         ends_at: n.ends_at,
         members: ids.map((i) => profiles[i]).filter(Boolean),
         post_count: posts.data.filter((p) => p.node_id === n.id).length,
+        photos: posts.data.filter((p) => p.node_id === n.id).slice(0, 3).map((p) => photoUrl(sb, p.photo_path)),
       }
     })
     .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))
@@ -151,6 +153,22 @@ async function getDay(sb, id) {
   const { data, error } = await sb.from('days').select('*').eq('id', id).maybeSingle()
   check({ error })
   return data ? buildDay(sb, data) : fail(404, 'Day not found')
+}
+
+// One activity with everyone's photos on it, newest first.
+async function getActivity(sb, id, viewerId) {
+  const { data, error } = await sb.from('nodes').select('*').eq('id', id).maybeSingle()
+  check({ error })
+  if (!data) fail(404, 'Activity not found')
+  const [[node], day, posts] = await Promise.all([
+    buildNodes(sb, [data]),
+    sb.from('days').select('id, title, date, owner_id').eq('id', data.day_id).single(),
+    sb.from('posts').select('*').eq('node_id', id).order('created_at', { ascending: false }),
+  ])
+  check(day)
+  check(posts)
+  const owner = (await profileMap(sb, [day.data.owner_id]))[day.data.owner_id]
+  return { node, day: { id: day.data.id, title: day.data.title, date: day.data.date, owner }, posts: await buildPosts(sb, posts.data, viewerId) }
 }
 
 async function getPost(sb, id, viewerId) {
@@ -252,9 +270,18 @@ app.get('/api/friends', route(async (req, sb) => {
     const [latest] = await daysOf(sb, friend_id, 1)
     let latest_day = null
     if (latest) {
-      const nodes = await sb.from('nodes').select('emoji, title, starts_at').eq('day_id', latest.id).order('starts_at')
+      const nodes = await sb.from('nodes').select('id, emoji, title, starts_at').eq('day_id', latest.id).order('starts_at')
       check(nodes)
-      latest_day = { id: latest.id, title: latest.title, date: latest.date, stops: nodes.data.map((n) => ({ emoji: n.emoji, title: n.title })) }
+      const posts = nodes.data.length
+        ? await sb.from('posts').select('photo_path').in('node_id', nodes.data.map((n) => n.id)).order('created_at', { ascending: false })
+        : { data: [] }
+      check(posts)
+      latest_day = {
+        id: latest.id, title: latest.title, date: latest.date,
+        stops: nodes.data.map((n) => ({ emoji: n.emoji, title: n.title })),
+        photos: posts.data.slice(0, 4).map((p) => photoUrl(sb, p.photo_path)),
+        moment_count: posts.data.length,
+      }
     }
     return { ...profiles[friend_id], latest_day }
   }))
@@ -282,6 +309,8 @@ app.get('/api/days/current', route(async (req, sb) => {
   days.sort((a, b) => b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at))
   return days.length ? buildDay(sb, days[0]) : fail(404, 'No day yet')
 }))
+
+app.get('/api/nodes/:id', route(async (req, sb) => getActivity(sb, req.params.id, (await userOf(req, sb))?.id)))
 
 app.get('/api/days/:id', route((req, sb) => getDay(sb, req.params.id)))
 

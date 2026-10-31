@@ -72,7 +72,7 @@ export default function Layout() {
         onPosted={(p) => {
           const next = [...posted, target.id]
           localStorage.setItem(postedKey, JSON.stringify(next)); setPosted(next)
-          setFile(null); nav(`/profile/${userId}`)
+          setFile(null); nav(`/node/${target.id}`)
         }} />
       <ClockSheet open={clockOpen} onClose={() => setClockOpen(false)} nodes={nodes} />
     </CaptureCtx.Provider>
