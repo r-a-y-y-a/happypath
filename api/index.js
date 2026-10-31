@@ -1,6 +1,6 @@
 import express from 'express'
 import { createClient } from '@supabase/supabase-js'
-import { places, travel } from './travel.js'
+import { places, travel } from '../backend/travel.js'
 
 const app = express()
 app.use(express.json())
