@@ -4,6 +4,7 @@
 import { onNusCampus, shuttleInfo } from './nus.js'
 
 const ONEMAP = 'https://www.onemap.gov.sg/api'
+const UA = 'happypath-hackathon/1.0 (https://github.com/r-a-y-y-a/happypath)'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const geoCache = new Map()
@@ -22,7 +23,7 @@ async function onemapSearch(q) {
 
 async function osmSearch(q) {
   const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=sg`, {
-    headers: { 'User-Agent': 'happypath-hackathon/1.0' },
+    headers: { 'User-Agent': UA },
   })
   if (!r.ok) return null
   const x = (await r.json())[0]
@@ -33,7 +34,7 @@ async function osmSearch(q) {
 const PHOTON = 'https://photon.komoot.io/api/?lat=1.35&lon=103.82&bbox=103.55,1.15,104.15,1.48'
 
 async function photonSearch(q, limit) {
-  const r = await fetch(`${PHOTON}&limit=${limit}&q=${encodeURIComponent(q)}`, { headers: { 'User-Agent': 'happypath-hackathon/1.0' } })
+  const r = await fetch(`${PHOTON}&limit=${limit}&q=${encodeURIComponent(q)}`, { headers: { 'User-Agent': UA } })
   if (!r.ok) throw new Error(`Photon ${r.status}`)
   return (await r.json()).features || []
 }
@@ -109,14 +110,18 @@ const title = (s) => String(s || '').toLowerCase().replace(/\b\w/g, (c) => c.toU
 const stopName = (s) => (s && s === s.toUpperCase() ? title(s).replace(/\bMrt\b/g, 'MRT').replace(/\bLrt\b/g, 'LRT') : s)
 
 // Several matches for a search box. OneMap knows Singapore addresses and buildings, Photon and Nominatim (OpenStreetMap) know shops, cafes and campus venues.
-// Photon goes first because it matches partial names. Failures are logged so a blocked provider does not go unnoticed.
-export async function places(q) {
+// Photon goes first because it matches partial names and allows search-as-you-type.
+// Nominatim's usage policy forbids auto-complete, so it is only queried when the caller asks for it (an explicit submit).
+// Failures are logged so a blocked provider does not go unnoticed.
+export async function places(q, { osm: useOsm = false } = {}) {
   const [photon, om, osm] = await Promise.allSettled([
     photonSearch(q, 6),
     fetch(`${ONEMAP}/common/elastic/search?searchVal=${encodeURIComponent(q)}&returnGeom=Y&getAddrDetails=Y&pageNum=1`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`OneMap ${r.status}`)))),
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=sg`, { headers: { 'User-Agent': 'happypath-hackathon/1.0' } })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`Nominatim ${r.status}`)))),
+    useOsm
+      ? fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=sg`, { headers: { 'User-Agent': UA } })
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`Nominatim ${r.status}`))))
+      : Promise.resolve([]),
   ])
   for (const [n, x] of [['Photon', photon], ['OneMap', om], ['Nominatim', osm]]) if (x.status === 'rejected') console.warn(`places: ${n} failed`, x.reason?.message)
   const out = []

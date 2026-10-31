@@ -1,14 +1,13 @@
 import { createContext, useContext, useMemo, useRef, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Clock3, Users } from 'lucide-react'
-import { Avatar } from './ui'
+import { Clock3 } from 'lucide-react'
 import Banner from './Banner'
 import { CameraSheet, ClockSheet } from './Sheets'
 import { useAuth } from '../lib/auth'
 import { isJumped, nodeState, useClockNodes, useNow, windowOpen } from '../lib/clock'
 import { fmtTime } from '../lib/fmt'
-import ThemeToggle from './ThemeToggle'
+import BottomNav from './BottomNav'
 
 const CaptureCtx = createContext(null)
 export const useCapture = () => useContext(CaptureCtx)
@@ -17,7 +16,7 @@ const postedKey = 'hp_posted'
 const getPosted = () => { try { return JSON.parse(localStorage.getItem(postedKey) || '[]') } catch { return [] } }
 
 export default function Layout() {
-  const { profile, userId } = useAuth()
+  const { userId } = useAuth()
   const nav = useNavigate()
   const t = useNow()
   const nodes = useClockNodes()
@@ -57,12 +56,6 @@ export default function Layout() {
               </button>
             )}
             <ThemeToggle />
-            {profile && (
-              <Link to="/friends" aria-label="Friends" className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-fg">
-                <Users size={18} />
-              </Link>
-            )}
-            {profile && <Link to={`/profile/${profile.id}`}><Avatar p={profile} size={36} /></Link>}
           </div>
         </header>
         <AnimatePresence mode="wait">
@@ -71,6 +64,7 @@ export default function Layout() {
           </motion.main>
         </AnimatePresence>
       </div>
+      <BottomNav />
       <Banner node={live} onPost={capture} onDismiss={() => setDismissed([...dismissed, live.id])} />
       <input ref={input} type="file" accept="image/*" capture="environment" className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; f && setFile(f) }} />
