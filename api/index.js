@@ -227,7 +227,7 @@ app.get('/api/travel', route(async (req) => {
 // Place search for the venue box, so anything in Singapore can be added.
 app.get('/api/places', route(async (req) => {
   const q = String(req.query.q || '').trim()
-  return q.length < 2 ? [] : places(q)
+  return q.length < 2 ? [] : places(q, { osm: req.query.osm === '1' })
 }))
 
 // Friends, each with their latest day so the Friends screen can show what they are up to.
