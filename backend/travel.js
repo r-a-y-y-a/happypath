@@ -1,5 +1,5 @@
 // Travel time between two venues in Singapore using OneMap (SLA) routing, with real MRT and bus journeys.
-// Venues are free text from users, so they are looked up on OneMap search and then OpenStreetMap, never from a fixed list.
+// Venues are free text from users, so they are looked up on OneMap search, then Photon and Nominatim (both OpenStreetMap), never from a fixed list.
 
 import { onNusCampus, shuttleInfo } from './nus.js'
 
@@ -29,11 +29,25 @@ async function osmSearch(q) {
   return x ? [Number(x.lat), Number(x.lon)] : null
 }
 
+// Photon is OpenStreetMap search that also matches half-typed names, biased to Singapore.
+const PHOTON = 'https://photon.komoot.io/api/?lat=1.35&lon=103.82&bbox=103.55,1.15,104.15,1.48'
+
+async function photonSearch(q, limit) {
+  const r = await fetch(`${PHOTON}&limit=${limit}&q=${encodeURIComponent(q)}`, { headers: { 'User-Agent': 'happypath-hackathon/1.0' } })
+  if (!r.ok) throw new Error(`Photon ${r.status}`)
+  return (await r.json()).features || []
+}
+
+async function photonCoords(q) {
+  const f = (await photonSearch(q, 1))[0]
+  return f ? [f.geometry.coordinates[1], f.geometry.coordinates[0]] : null
+}
+
 export async function geocode(name) {
   const key = norm(name)
   if (!key) return null
   if (!geoCache.has(key)) {
-    geoCache.set(key, (async () => (await onemapSearch(name)) || (await osmSearch(`${name} Singapore`)))().catch(() => null))
+    geoCache.set(key, (async () => (await onemapSearch(name)) || (await photonCoords(name).catch(() => null)) || (await osmSearch(`${name} Singapore`)))().catch(() => null))
   }
   const hit = await geoCache.get(key)
   if (!hit) geoCache.delete(key)
@@ -94,24 +108,39 @@ const title = (s) => String(s || '').toLowerCase().replace(/\b\w/g, (c) => c.toU
 // OneMap shouts transit stop names in capitals.
 const stopName = (s) => (s && s === s.toUpperCase() ? title(s).replace(/\bMrt\b/g, 'MRT').replace(/\bLrt\b/g, 'LRT') : s)
 
-// Several matches for a search box. OneMap knows Singapore places and addresses, OpenStreetMap knows shops and cafes.
+// Several matches for a search box. OneMap knows Singapore addresses and buildings, Photon and Nominatim (OpenStreetMap) know shops, cafes and campus venues.
+// Photon goes first because it matches partial names. Failures are logged so a blocked provider does not go unnoticed.
 export async function places(q) {
-  const [om, osm] = await Promise.allSettled([
+  const [photon, om, osm] = await Promise.allSettled([
+    photonSearch(q, 6),
     fetch(`${ONEMAP}/common/elastic/search?searchVal=${encodeURIComponent(q)}&returnGeom=Y&getAddrDetails=Y&pageNum=1`)
-      .then((r) => (r.ok ? r.json() : { results: [] })),
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`OneMap ${r.status}`)))),
     fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=sg`, { headers: { 'User-Agent': 'happypath-hackathon/1.0' } })
-      .then((r) => (r.ok ? r.json() : [])),
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`Nominatim ${r.status}`)))),
   ])
+  for (const [n, x] of [['Photon', photon], ['OneMap', om], ['Nominatim', osm]]) if (x.status === 'rejected') console.warn(`places: ${n} failed`, x.reason?.message)
   const out = []
   const seen = new Set()
   const add = (name, address, lat, lng) => {
-    const k = `${lat.toFixed(3)},${lng.toFixed(3)}`
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || seen.has(k)) return
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+    const k = `${norm(name)}|${lat.toFixed(3)},${lng.toFixed(3)}`
+    const byName = norm(name)
+    // Estates have one OneMap row per block, so keep one row per name.
+    if (seen.has(k) || seen.has(byName)) return
     seen.add(k)
+    seen.add(byName)
     out.push({ name, address, lat, lng })
   }
+  if (photon.status === 'fulfilled') {
+    for (const f of photon.value) {
+      const p = f.properties
+      const [lng, lat] = f.geometry.coordinates
+      const street = [p.housenumber, p.street].filter(Boolean).join(' ')
+      add(p.name || street, [street && p.name ? street : '', p.district || p.city].filter(Boolean).join(', '), lat, lng)
+    }
+  }
   if (om.status === 'fulfilled') {
-    for (const x of (om.value.results || []).slice(0, 4)) add(title(x.SEARCHVAL), title(x.ADDRESS), Number(x.LATITUDE), Number(x.LONGITUDE))
+    for (const x of (om.value.results || []).slice(0, 6)) add(title(x.SEARCHVAL), title(x.ADDRESS), Number(x.LATITUDE), Number(x.LONGITUDE))
   }
   if (osm.status === 'fulfilled') {
     for (const x of osm.value.slice(0, 4)) add(x.name || x.display_name.split(',')[0], x.display_name.split(',').slice(1, 3).join(',').trim(), Number(x.lat), Number(x.lon))
