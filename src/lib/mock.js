@@ -132,6 +132,16 @@ export async function mockRequest(method, path, body) {
     if (!d) throw err(404, 'Day not found')
     return dayOut(d)
   }
+  if ((m = path.match(/^\/nodes\/([^/]+)$/)) && method === 'GET') {
+    const n = db.nodes.find((x) => x.id === m[1])
+    if (!n) throw err(404, 'Stop not found')
+    const d = db.days.find((x) => x.id === n.day_id)
+    return {
+      node: nodeOut(n),
+      day: { id: d.id, title: d.title, date: d.date },
+      posts: db.posts.filter((p) => p.node_id === n.id).sort((a, b) => b.created_at.localeCompare(a.created_at)).map(postOut),
+    }
+  }
   if (key === 'POST /days') {
     need()
     const d = { id: 'day-' + Date.now(), title: body.title, date: body.date, owner_id: me, memberIds: [me] }
