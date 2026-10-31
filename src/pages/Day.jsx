@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Camera, Plus, UserPlus } from 'lucide-react'
+import { Camera, ChevronRight, Plus, UserPlus } from 'lucide-react'
 import { get, post } from '../lib/api'
 import { useLive } from '../lib/live'
 import { useAuth } from '../lib/auth'
@@ -111,6 +111,11 @@ export default function Day() {
         <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/50 blur-2xl" />
         <p className="text-xs font-bold uppercase tracking-widest opacity-70">{fmtDate(day.date + 'T12:00:00+08:00')}</p>
         <h1 className="mt-1 font-display text-[30px] font-extrabold leading-tight">{day.title}</h1>
+        {day.owner && day.owner.id !== userId && (
+          <Link to={`/profile/${day.owner.id}`} className="mt-1 inline-flex items-center gap-1 text-[13px] font-bold underline-offset-2 hover:underline">
+            {day.owner.display_name}'s diary<ChevronRight size={14} />
+          </Link>
+        )}
         <div className="mt-4 flex items-center justify-between">
           <AvatarStack people={day.members} size={34} max={5} />
           <motion.button whileTap={{ scale: 0.95 }} onClick={() => setInviteOpen(true)}
