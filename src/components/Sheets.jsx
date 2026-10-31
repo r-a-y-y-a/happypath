@@ -10,7 +10,7 @@ import { fmtTime } from '../lib/fmt'
 const EMOJIS = ['🍽️', '🧗', '🌅', '☕', '🎬', '🏖️', '🎤', '🛍️']
 
 // Venue box that suggests real places as you type. Picking one saves its exact coordinates for travel times.
-function PlaceField({ value, onText, onPick }) {
+function PlaceField({ value, picked, onText, onPick }) {
   const [results, setResults] = useState([])
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -28,6 +28,9 @@ function PlaceField({ value, onText, onPick }) {
     <div className="relative">
       <Field label="Where" placeholder="Search any place in Singapore" value={value} autoComplete="off"
         onChange={(e) => { onText(e.target.value); setOpen(true) }} onFocus={() => setOpen(true)} />
+      {!picked && value.trim().length > 2 && !open && (
+        <p className="mt-1.5 text-[11px] text-muted">Pick a suggestion for exact travel times.</p>
+      )}
       {open && (busy || results.length > 0) && (
         <ul className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-2xl border border-surface-2 bg-surface-2 py-1 shadow-2xl shadow-black/50">
           {busy && results.length === 0 && <li className="px-4 py-3 text-[13px] text-muted">Searching...</li>}
@@ -81,7 +84,7 @@ export function AddNodeSheet({ open, onClose, day, onAdded }) {
           ))}
         </div>
         <Field label="What" placeholder="Sunset at Marina Barrage" value={f.title} onChange={set('title')} />
-        <PlaceField value={f.venue} onText={(venue) => setF({ ...f, venue, lat: null, lng: null })}
+        <PlaceField value={f.venue} picked={f.lat != null} onText={(venue) => setF({ ...f, venue, lat: null, lng: null })}
           onPick={(r) => setF({ ...f, venue: r.name, lat: r.lat, lng: r.lng })} />
         <div className="grid grid-cols-2 gap-3">
           <Field label="Starts" type="time" value={f.start} onChange={set('start')} />
