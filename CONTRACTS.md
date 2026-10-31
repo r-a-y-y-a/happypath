@@ -5,7 +5,7 @@ Changing either one needs the lead's approval.
 
 ## Auth
 The browser signs in with Supabase auth.
-Judges and friends use anonymous sign-in, then create their profile with `PUT /api/profiles/me`.
+Judges and friends sign in with Google (the guest option was removed from the sign-in page), then create their profile with `PUT /api/profiles/me`.
 The demo personas (Maya, Jun, Priya, Daniel) are real auth users with password `happypath-demo`.
 Their emails are `maya@happypath.demo`, `jun@happypath.demo`, `priya@happypath.demo` and `daniel@happypath.demo`.
 The app has a "Demo login" button that signs in as Maya.

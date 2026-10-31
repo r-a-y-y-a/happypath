@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Button, Field } from '../components/ui'
+import { Button } from '../components/ui'
 import ThemeToggle from '../components/ThemeToggle'
 import { useAuth } from '../lib/auth'
 import { MOCK } from '../lib/supabase'
@@ -8,8 +8,7 @@ import { MOCK } from '../lib/supabase'
 const photos = ['brunch', 'climb-wall', 'sunset', 'kaya', 'ubin-bike', 'chickenrice']
 
 export default function SignIn({ onDone, heading = 'Plan the day.', sub = 'Catch the moment.' }) {
-  const { demoLogin, guestLogin, googleLogin } = useAuth()
-  const [name, setName] = useState('')
+  const { demoLogin, googleLogin } = useAuth()
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
   const run = (k, fn) => async () => {
@@ -44,10 +43,6 @@ export default function SignIn({ onDone, heading = 'Plan the day.', sub = 'Catch
             {busy === 'google' ? 'Opening Google...' : 'Continue with Google'}
           </button>
         )}
-        <Field label="Or join as a guest" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
-        <Button onClick={run('guest', () => guestLogin(name))} disabled={!name.trim() || !!busy} variant="mint" className="w-full">
-          {busy === 'guest' ? 'Joining...' : 'Continue as guest'}
-        </Button>
         <Button onClick={run('demo', demoLogin)} disabled={!!busy} className="w-full">
           {busy === 'demo' ? 'Signing in...' : 'Demo login as Maya'}
         </Button>
