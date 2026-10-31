@@ -13,18 +13,26 @@ const mins = (m) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60 ? `
 const coords = (n, k) => (n.lat != null && n.lng != null ? `&${k}Lat=${n.lat}&${k}Lng=${n.lng}` : '')
 const venueOf = (n) => (n.venue || n.title || '').trim()
 
+const stopsLabel = (n) => `${n} ${n === 1 ? 'stop' : 'stops'}`
+
+// Each bus or MRT leg: the line, where to board, how many stops, and where to get off.
 function Legs({ legs }) {
   return (
-    <span className="flex flex-wrap items-center gap-1">
+    <ol className="space-y-1.5">
       {legs.map((l, i) => (
-        <span key={i} className="flex items-center gap-1">
-          {i > 0 && <span className="text-muted">›</span>}
-          <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${l.mode === 'mrt' ? 'bg-mint/20 text-mint' : 'bg-amber/20 text-amber'}`}>
+        <li key={i} className="flex items-start gap-2">
+          <span className={`mt-0.5 flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${l.mode === 'mrt' ? 'bg-mint/20 text-mint' : 'bg-amber/20 text-amber'}`}>
             {l.mode === 'mrt' ? <TrainFront size={11} /> : <Bus size={11} />}{l.label}
           </span>
-        </span>
+          <p className="min-w-0 flex-1 text-[12px] leading-snug">
+            <span className="text-muted">Board at </span>{l.from}
+            <span className="text-muted"> · {stopsLabel(l.stops)}{l.minutes ? `, ${mins(l.minutes)}` : ''} · get off at </span>
+            <span className="font-semibold">{l.to}</span>
+            {l.to_code && <span className="text-muted"> ({l.to_code})</span>}
+          </p>
+        </li>
       ))}
-    </span>
+    </ol>
   )
 }
 
@@ -98,7 +106,7 @@ export default function TravelLeg({ from, to }) {
                 </li>
               )
             })}
-            <li className="px-3 pb-1 text-[10px] text-muted">Routes from OneMap Singapore, using the stop's departure time.{shuttle ? ` ${shuttle.note}` : ''}</li>
+            <li className="px-3 pb-1 text-[10px] text-muted">Based on the stop's departure time.{shuttle ? ` ${shuttle.note}` : ''}</li>
           </motion.ul>
         )}
       </AnimatePresence>

@@ -27,7 +27,7 @@ Errors are `{ "error": "message" }` with a 4xx or 5xx status.
 | GET `/api/profiles/:id/diary` | | `{ profile, posts: Post[] }`, newest first |
 | GET `/api/profiles/:id/days` | | Day[], the person's most recent days (up to 6), newest first |
 | GET `/api/places?q=` | | `{ name, address, lat, lng }[]`, up to 6 matches in Singapore for the venue search box |
-| GET `/api/travel?from=&to=&depart=&fromLat=&fromLng=&toLat=&toLng=` | | `{ from, to, options: Option[], error? }`, venues are free text in Singapore, `depart` is an ISO time, options are fastest first, `shuttle: { routes, every_min: [min, max], note }` is added when both stops are on the NUS Kent Ridge campus |
+| GET `/api/travel?from=&to=&depart=&fromLat=&fromLng=&toLat=&toLng=` | | `{ from, to, options: Option[], error? }`, venues are free text in Singapore, `depart` is an ISO time, options are fastest first, transit options carry `legs: { mode: 'bus'|'mrt', label, from, to, stops, minutes, to_code? }[]` (`stops` counts stops ridden including the one you get off at), `shuttle: { routes, every_min: [min, max], note }` is added when both stops are on the NUS Kent Ridge campus |
 | GET `/api/friends` | | `(Profile & { latest_day: { id, title, date, stops: { emoji, title }[] } \| null })[]`, most recently active first |
 | POST `/api/friends/:id` | | `{ ok: true }`, adds the friendship in both directions. Joining someone's day by link also befriends the day owner |
 | GET `/api/days/current` | | the caller's most recent day, as a Day, or 404 |
