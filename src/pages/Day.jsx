@@ -5,7 +5,7 @@ import { Camera, Plus, UserPlus } from 'lucide-react'
 import { get, post } from '../lib/api'
 import { useLive } from '../lib/live'
 import { useAuth } from '../lib/auth'
-import { nodeState, setClockNodes, useNow } from '../lib/clock'
+import { nodeState, setClockNodes, syncClock, useNow } from '../lib/clock'
 import { fmtDate, fmtRange, localDate } from '../lib/fmt'
 import { AvatarStack, Button, Empty, ErrorState, Skeleton } from '../components/ui'
 import { AddNodeSheet, InviteSheet } from '../components/Sheets'
@@ -98,6 +98,7 @@ export default function Day() {
     catch (e) { setErr(e.message) }
   }, [id])
   useEffect(() => { setDay(null); load(); return () => setClockNodes([]) }, [load])
+  useEffect(() => syncClock(id), [id])
   useLive(['nodes', 'day_members', 'posts'], load)
 
   if (err && !day) return <ErrorState message={err} onRetry={load} />
@@ -127,10 +128,12 @@ export default function Day() {
         </ol>
       )}
 
-      <motion.button whileTap={{ scale: 0.92 }} onClick={() => setAddOpen(true)} aria-label="Add a stop"
-        className="fixed bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 z-30 flex h-14 -translate-x-1/2 items-center gap-2 rounded-full bg-cloud px-6 font-bold text-ink shadow-2xl shadow-black/50">
-        <Plus size={20} />Add a stop
-      </motion.button>
+      <div className="mt-6 flex justify-center pb-10">
+        <motion.button whileTap={{ scale: 0.95 }} onClick={() => setAddOpen(true)} aria-label="Add a stop"
+          className="flex h-12 items-center gap-2 rounded-full bg-cloud px-6 font-bold text-ink shadow-xl shadow-black/40">
+          <Plus size={20} />Add a stop
+        </motion.button>
+      </div>
       <AddNodeSheet open={addOpen} onClose={() => setAddOpen(false)} day={day} onAdded={load} />
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} day={day} />
     </div>

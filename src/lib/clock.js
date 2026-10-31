@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { supabase } from './supabase'
 
 // Demo clock: all window and banner logic reads this, never Date.now() directly.
 let offset = Number(localStorage.getItem('hp_clock_offset') || 0)
@@ -12,15 +13,35 @@ setInterval(() => { tick++; emit() }, 1000)
 export const now = () => Date.now() + offset
 export const isJumped = () => offset !== 0
 
-export function jumpTo(ms) {
-  offset = ms - Date.now()
-  localStorage.setItem('hp_clock_offset', String(offset))
+// The jump is shared with every phone on the same day over a Realtime broadcast channel,
+// and the invite link carries the current offset for anyone joining after the jump.
+let channel = null
+const KEY = 'hp_clock_offset'
+export const getOffset = () => offset
+export function setOffset(o) {
+  offset = o
+  if (o) localStorage.setItem(KEY, String(o))
+  else localStorage.removeItem(KEY)
   emit()
 }
+const share = () => channel?.send({ type: 'broadcast', event: 'offset', payload: { offset } })
+
+export function jumpTo(ms) {
+  setOffset(ms - Date.now())
+  share()
+}
 export function resetClock() {
-  offset = 0
-  localStorage.removeItem('hp_clock_offset')
-  emit()
+  setOffset(0)
+  share()
+}
+export function syncClock(dayId) {
+  if (!supabase || !dayId) return undefined
+  const ch = supabase.channel('clock-' + dayId, { config: { broadcast: { self: false } } })
+  ch.on('broadcast', { event: 'offset' }, ({ payload }) => setOffset(Number(payload.offset) || 0))
+  // A phone that has already jumped tells a phone that has just connected.
+  ch.subscribe((status) => { if (status === 'SUBSCRIBED' && offset) ch.send({ type: 'broadcast', event: 'offset', payload: { offset } }) })
+  channel = ch
+  return () => { channel = null; supabase.removeChannel(ch) }
 }
 export function setClockNodes(nodes) {
   dayNodes = nodes

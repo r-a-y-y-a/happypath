@@ -31,7 +31,7 @@ Errors are `{ "error": "message" }` with a 4xx or 5xx status.
 | POST `/api/days/:id/join` | | `{ ok: true }`, adds the caller to the day and every node in it |
 | POST `/api/days/:id/nodes` | `{ title, venue?, emoji?, starts_at, ends_at }` | Node, every current day member is added to it |
 | POST `/api/nodes/:id/join` | | `{ ok: true }` |
-| POST `/api/posts` | `{ node_id, photo_path, caption? }` | Post |
+| POST `/api/posts` | `{ node_id, photo_path, caption?, created_at? }` | Post, `created_at` is the demo clock time when the clock was jumped |
 | POST `/api/posts/:id/like` | | `{ liked, like_count }`, toggles |
 | GET `/api/posts/:id/comments` | | Comment[], oldest first |
 | POST `/api/posts/:id/comments` | `{ body }` | Comment |

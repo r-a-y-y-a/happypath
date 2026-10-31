@@ -275,6 +275,8 @@ app.post('/api/posts', route(async (req, sb) => {
     photo_path: str(b.photo_path, 'photo_path'),
     caption: b.caption || null,
   }
+  // The demo clock stamps posts with demo time so the diary matches what is on screen.
+  if (b.created_at && !Number.isNaN(Date.parse(b.created_at))) row.created_at = new Date(b.created_at).toISOString()
   const post = await sb.from('posts').insert(row).select().single()
   check(post)
   return (await buildPosts(sb, [post.data], user.id))[0]

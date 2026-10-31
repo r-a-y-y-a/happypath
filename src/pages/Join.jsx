@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { post } from '../lib/api'
+import { setOffset } from '../lib/clock'
 import { ErrorState, Skeleton } from '../components/ui'
 import SignIn from './SignIn'
 
@@ -11,6 +12,11 @@ export default function Join() {
   const nav = useNavigate()
   const [err, setErr] = useState('')
   const ran = useRef(false)
+
+  useEffect(() => {
+    const co = Number(new URLSearchParams(location.search).get('co'))
+    if (co) setOffset(co)
+  }, [])
 
   useEffect(() => {
     if (loading || !userId || !profile || ran.current) return

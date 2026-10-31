@@ -4,7 +4,7 @@ import { Check, Copy, ImagePlus, Send } from 'lucide-react'
 import { Button, Field, Sheet } from './ui'
 import { post, uploadPhoto, resizeImage } from '../lib/api'
 import { useAuth } from '../lib/auth'
-import { jumpTo, resetClock, isJumped, nodeState, now } from '../lib/clock'
+import { jumpTo, resetClock, isJumped, getOffset, nodeState, now } from '../lib/clock'
 import { fmtTime } from '../lib/fmt'
 
 const EMOJIS = ['🍽️', '🧗', '🌅', '☕', '🎬', '🏖️', '🎤', '🛍️']
@@ -34,7 +34,7 @@ export function AddNodeSheet({ open, onClose, day, onAdded }) {
   return (
     <Sheet open={open} onClose={onClose} title="Add a stop">
       <form onSubmit={submit} className="space-y-4">
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
           {EMOJIS.map((e) => (
             <button type="button" key={e} onClick={() => setF({ ...f, emoji: e })}
               className={`h-12 w-12 shrink-0 rounded-2xl text-2xl ${f.emoji === e ? 'bg-coral/25 ring-2 ring-coral' : 'bg-surface-2'}`}>{e}</button>
@@ -55,7 +55,7 @@ export function AddNodeSheet({ open, onClose, day, onAdded }) {
 
 export function InviteSheet({ open, onClose, day }) {
   const [copied, setCopied] = useState(false)
-  const url = `${location.origin}/join/${day.id}`
+  const url = `${location.origin}/join/${day.id}${isJumped() ? `?co=${Math.round(getOffset())}` : ''}`
   const copy = async () => {
     try { await navigator.clipboard.writeText(url) } catch { /* ignore */ }
     setCopied(true); setTimeout(() => setCopied(false), 1800)
@@ -90,7 +90,7 @@ export function CameraSheet({ node, file, onClose, onPosted }) {
     try {
       const blob = await resizeImage(file)
       const photo_path = await uploadPhoto(blob, userId)
-      const p = await post('/posts', { node_id: node.id, photo_path, caption: caption.trim() || undefined })
+      const p = await post('/posts', { node_id: node.id, photo_path, caption: caption.trim() || undefined, created_at: isJumped() ? new Date(now()).toISOString() : undefined })
       onPosted(p)
       setCaption('')
     } catch (x) { setErr(x.message || 'Upload failed') } finally { setBusy(false) }
