@@ -1,5 +1,6 @@
 import express from 'express'
 import { createClient } from '@supabase/supabase-js'
+import { travel } from './travel.js'
 
 const app = express()
 app.use(express.json())
@@ -195,6 +196,62 @@ app.get('/api/profiles/:id/diary', route(async (req, sb) => {
   return { profile, posts: await buildPosts(sb, data, viewer?.id) }
 }))
 
+// Friendships are stored one row per direction.
+async function befriend(sb, a, b) {
+  if (!a || !b || a === b) return
+  check(await sb.from('friendships').upsert(
+    [{ user_id: a, friend_id: b }, { user_id: b, friend_id: a }],
+    { onConflict: 'user_id,friend_id', ignoreDuplicates: true },
+  ))
+}
+
+const daysOf = async (sb, userId, limit) => {
+  const m = await sb.from('day_members').select('day_id').eq('user_id', userId)
+  check(m)
+  if (!m.data.length) return []
+  const d = await sb.from('days').select('*').in('id', m.data.map((x) => x.day_id))
+  check(d)
+  return d.data.sort((a, b) => b.date.localeCompare(a.date) || b.created_at.localeCompare(a.created_at)).slice(0, limit)
+}
+
+// Travel options between two stops. Never fails the page: with no options the app just hides the leg.
+app.get('/api/travel', route(async (req) => {
+  const { from, to, depart } = req.query
+  if (!from || !to) fail(400, 'from and to are required')
+  return travel(String(from), String(to), depart && String(depart))
+}))
+
+// Friends, each with their latest day so the Friends screen can show what they are up to.
+app.get('/api/friends', route(async (req, sb) => {
+  const user = await need(req, sb)
+  const f = await sb.from('friendships').select('friend_id').eq('user_id', user.id)
+  check(f)
+  const profiles = await profileMap(sb, f.data.map((x) => x.friend_id))
+  const out = await Promise.all(f.data.map(async ({ friend_id }) => {
+    const [latest] = await daysOf(sb, friend_id, 1)
+    let latest_day = null
+    if (latest) {
+      const nodes = await sb.from('nodes').select('emoji, title, starts_at').eq('day_id', latest.id).order('starts_at')
+      check(nodes)
+      latest_day = { id: latest.id, title: latest.title, date: latest.date, stops: nodes.data.map((n) => ({ emoji: n.emoji, title: n.title })) }
+    }
+    return { ...profiles[friend_id], latest_day }
+  }))
+  return out.filter((p) => p.id).sort((a, b) => (b.latest_day?.date || '').localeCompare(a.latest_day?.date || ''))
+}))
+
+app.post('/api/friends/:id', route(async (req, sb) => {
+  const user = await need(req, sb)
+  await getProfile(sb, req.params.id)
+  await befriend(sb, user.id, req.params.id)
+  return { ok: true }
+}))
+
+app.get('/api/profiles/:id/days', route(async (req, sb) => {
+  const profile = await getProfile(sb, req.params.id)
+  return Promise.all((await daysOf(sb, profile.id, 6)).map((d) => buildDay(sb, d)))
+}))
+
 // Declared before /api/days/:id so "current" is not read as an id.
 app.get('/api/days/current', route(async (req, sb) => {
   const user = await need(req, sb)
@@ -219,7 +276,7 @@ app.post('/api/days', route(async (req, sb) => {
 
 app.post('/api/days/:id/join', route(async (req, sb) => {
   const user = await need(req, sb)
-  const day = await sb.from('days').select('id').eq('id', req.params.id).maybeSingle()
+  const day = await sb.from('days').select('id, owner_id').eq('id', req.params.id).maybeSingle()
   check(day)
   if (!day.data) fail(404, 'Day not found')
   check(await sb.from('day_members').upsert({ day_id: day.data.id, user_id: user.id }, { ignoreDuplicates: true }))
@@ -231,6 +288,7 @@ app.post('/api/days/:id/join', route(async (req, sb) => {
       { ignoreDuplicates: true },
     ))
   }
+  await befriend(sb, user.id, day.data.owner_id).catch(() => {})
   return { ok: true }
 }))
 

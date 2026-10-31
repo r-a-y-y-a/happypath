@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, Heart, LogOut, MessageCircle, Send } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Heart, LogOut, MessageCircle, Send, UserPlus } from 'lucide-react'
 import { get, post } from '../lib/api'
 import { useLive } from '../lib/live'
 import { useAuth } from '../lib/auth'
@@ -24,6 +24,15 @@ export default function Profile() {
   const { userId, signOut } = useAuth()
   const nav = useNavigate()
   const { data, err, load } = useDiary(id)
+  const [days, setDays] = useState([])
+  const [friends, setFriends] = useState(null)
+  const loadFriends = useCallback(() => get('/friends').then(setFriends).catch(() => setFriends(null)), [])
+  useEffect(() => {
+    setDays([])
+    get(`/profiles/${id}/days`).then(setDays).catch(() => {})
+    loadFriends()
+  }, [id, loadFriends])
+  const addFriend = async () => { await post(`/friends/${id}`); loadFriends() }
   if (err && !data) return <ErrorState message={err} onRetry={load} />
   if (!data) {
     return (
@@ -47,12 +56,37 @@ export default function Profile() {
         <span className="rounded-full bg-surface px-3.5 py-1.5 text-sm font-semibold">
           <b className="text-coral">{posts.length}</b> {posts.length === 1 ? 'moment' : 'moments'}
         </span>
+        {userId !== id && friends && !friends.some((f) => f.id === id) && (
+          <button onClick={addFriend} className="flex items-center gap-1.5 rounded-full bg-coral px-3.5 py-1.5 text-sm font-bold text-ink">
+            <UserPlus size={15} />Add friend
+          </button>
+        )}
         {userId === id && (
           <button onClick={async () => { await signOut(); nav('/') }} className="flex items-center gap-1.5 text-xs font-semibold text-muted">
             <LogOut size={14} />Sign out
           </button>
         )}
       </div>
+      {days.length > 0 && (
+        <section className="mt-6">
+          <h2 className="font-display text-xl font-extrabold">Days</h2>
+          <ul className="mt-3 space-y-2.5">
+            {days.map((d) => (
+              <li key={d.id}>
+                <Link to={`/day/${d.id}`} className="flex items-center gap-3 rounded-3xl bg-surface p-4 active:scale-[0.99]">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-bold">{d.title}</p>
+                    <p className="text-[12px] text-muted">{fmtDate(d.date + 'T12:00:00')} · {d.nodes.length} {d.nodes.length === 1 ? 'stop' : 'stops'}</p>
+                    <p className="mt-1 truncate text-lg tracking-wide">{d.nodes.map((n) => n.emoji).join(' ')}</p>
+                  </div>
+                  <ChevronRight size={18} className="shrink-0 text-muted" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <h2 className="mt-7 font-display text-xl font-extrabold">Moments</h2>
+        </section>
+      )}
       {posts.length === 0 ? (
         <Empty emoji="📸" title="No moments yet" body="Photos posted during a stop land here." />
       ) : (

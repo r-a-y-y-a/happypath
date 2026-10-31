@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useRef, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Clock3 } from 'lucide-react'
+import { Clock3, Users } from 'lucide-react'
 import { Avatar } from './ui'
 import Banner from './Banner'
 import { CameraSheet, ClockSheet } from './Sheets'
@@ -54,6 +54,11 @@ export default function Layout() {
               <button onClick={() => setClockOpen(true)} className="flex items-center gap-1 rounded-full bg-mint/15 px-2.5 py-1 text-xs font-bold text-mint">
                 <Clock3 size={13} />{fmtTime(t)}
               </button>
+            )}
+            {profile && (
+              <Link to="/friends" aria-label="Friends" className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-cloud">
+                <Users size={18} />
+              </Link>
             )}
             {profile && <Link to={`/profile/${profile.id}`}><Avatar p={profile} size={36} /></Link>}
           </div>

@@ -25,6 +25,10 @@ Errors are `{ "error": "message" }` with a 4xx or 5xx status.
 | PUT `/api/profiles/me` | `{ display_name, avatar_url?, bio? }` | profile |
 | GET `/api/profiles/:id` | | profile |
 | GET `/api/profiles/:id/diary` | | `{ profile, posts: Post[] }`, newest first |
+| GET `/api/profiles/:id/days` | | Day[], the person's most recent days (up to 6), newest first |
+| GET `/api/travel?from=&to=&depart=` | | `{ from, to, options: Option[], error? }`, venues are free text in Singapore, `depart` is an ISO time, options are fastest first |
+| GET `/api/friends` | | `(Profile & { latest_day: { id, title, date, stops: { emoji, title }[] } \| null })[]`, most recently active first |
+| POST `/api/friends/:id` | | `{ ok: true }`, adds the friendship in both directions. Joining someone's day by link also befriends the day owner |
 | GET `/api/days/current` | | the caller's most recent day, as a Day, or 404 |
 | GET `/api/days/:id` | | Day |
 | POST `/api/days` | `{ title, date }` | Day, owner is added as a member |

@@ -10,6 +10,7 @@ import { fmtDate, fmtRange, localDate } from '../lib/fmt'
 import { AvatarStack, Button, Empty, ErrorState, Skeleton } from '../components/ui'
 import { AddNodeSheet, InviteSheet } from '../components/Sheets'
 import { useCapture } from '../components/Layout'
+import TravelLeg from '../components/Travel'
 
 export function Home() {
   const nav = useNavigate()
@@ -49,7 +50,7 @@ const CHIP = {
   past: ['Done', 'bg-surface-2 text-muted'],
 }
 
-function NodeCard({ node, i, t, userId }) {
+function NodeCard({ node, next, i, t, userId }) {
   const { capture, posted } = useCapture()
   const st = nodeState(node, t)
   const open = st === 'live' || st === 'grace'
@@ -80,6 +81,7 @@ function NodeCard({ node, i, t, userId }) {
           <Button onClick={() => capture(node)} className="mt-3 h-11 w-full"><Camera size={18} />Post your moment</Button>
         )}
       </div>
+      {next && <TravelLeg from={node} to={next} />}
     </motion.li>
   )
 }
@@ -123,17 +125,17 @@ export default function Day() {
       ) : (
         <ol className="relative mt-6 space-y-4 before:absolute before:bottom-6 before:left-[12px] before:top-6 before:w-0.5 before:bg-surface-2">
           <AnimatePresence initial={false}>
-            {day.nodes.map((n, i) => <NodeCard key={n.id} node={n} i={i} t={t} userId={userId} />)}
+            {day.nodes.map((n, i) => <NodeCard key={n.id} node={n} next={day.nodes[i + 1]} i={i} t={t} userId={userId} />)}
           </AnimatePresence>
         </ol>
       )}
 
-      <div className="mt-6 flex justify-center pb-10">
+      {day.members.some((m) => m.id === userId) && <div className="mt-6 flex justify-center pb-10">
         <motion.button whileTap={{ scale: 0.95 }} onClick={() => setAddOpen(true)} aria-label="Add a stop"
           className="flex h-12 items-center gap-2 rounded-full bg-cloud px-6 font-bold text-ink shadow-xl shadow-black/40">
           <Plus size={20} />Add a stop
         </motion.button>
-      </div>
+      </div>}
       <AddNodeSheet open={addOpen} onClose={() => setAddOpen(false)} day={day} onAdded={load} />
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} day={day} />
     </div>

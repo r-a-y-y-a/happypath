@@ -93,6 +93,17 @@ async function wipe(ids) {
 
 const insert = async (table, rows) => must(await sb.from(table).insert(rows).select(), `insert ${table}`)
 
+// Friendships are optional until supabase/friends.sql has been run, so a missing table only warns.
+async function seedFriends({ maya, jun, priya, daniel }) {
+  const pairs = [[maya, jun], [maya, priya], [maya, daniel], [jun, priya], [priya, daniel]]
+  const list = [maya, jun, priya, daniel]
+  const rows = pairs.flatMap(([a, b]) => [{ user_id: a, friend_id: b }, { user_id: b, friend_id: a }])
+  const gone = await sb.from('friendships').delete().in('user_id', list)
+  if (gone.error) return console.warn('Skipping friendships (run supabase/friends.sql first):', gone.error.message)
+  must(await sb.from('friendships').delete().in('friend_id', list), 'wipe friendships')
+  must(await sb.from('friendships').insert(rows), 'insert friendships')
+}
+
 async function main() {
   await checkUrls()
   const ids = await ensureUsers()
@@ -154,6 +165,8 @@ async function main() {
     { post_id: junPost.id, author_id: maya, body: 'I was on the way, I swear!', created_at: postAt(today, '10:31') },
     { post_id: priyaPost.id, author_id: jun, body: 'Flash it again for the camera 😂', created_at: postAt(today, '13:58') },
   ])
+
+  await seedFriends({ maya, jun, priya, daniel })
 
   console.log(`Seeded: 4 users, 4 days (3 past + Saturday ${today}), 9 nodes.`)
 }
