@@ -19,17 +19,26 @@ function PlaceField({ value, picked, onText, onPick }) {
     if (!open || q.length < 3) return setResults([])
     let live = true
     setBusy(true)
+    // As-you-type search uses OneMap only. OpenStreetMap's public Nominatim forbids auto-complete, so it runs on Enter.
     const id = setTimeout(() => {
       get(`/places?q=${encodeURIComponent(q)}`).then((r) => live && setResults(r)).catch(() => live && setResults([])).finally(() => live && setBusy(false))
     }, 350)
     return () => { live = false; clearTimeout(id) }
   }, [value, open])
+  const searchMore = (e) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    const q = value.trim()
+    if (q.length < 3) return
+    setBusy(true)
+    get(`/places?q=${encodeURIComponent(q)}&osm=1`).then(setResults).catch(() => setResults([])).finally(() => setBusy(false))
+  }
   return (
     <div className="relative">
-      <Field label="Where" placeholder="Search any place in Singapore" value={value} autoComplete="off"
+      <Field label="Where" placeholder="Search any place in Singapore" value={value} autoComplete="off" onKeyDown={searchMore}
         onChange={(e) => { onText(e.target.value); setOpen(true) }} onFocus={() => setOpen(true)} />
       {!picked && value.trim().length > 2 && !open && (
-        <p className="mt-1.5 text-[11px] text-muted">Pick a suggestion for exact travel times.</p>
+        <p className="mt-1.5 text-[11px] text-muted">Pick a suggestion for exact travel times. Press Enter to search more places.</p>
       )}
       {open && (busy || results.length > 0) && (
         <ul className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-2xl border border-surface-2 bg-surface-2 py-1 shadow-2xl shadow-black/50">

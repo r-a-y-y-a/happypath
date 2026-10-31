@@ -4,6 +4,7 @@
 import { onNusCampus, shuttleInfo } from './nus.js'
 
 const ONEMAP = 'https://www.onemap.gov.sg/api'
+const UA = 'happypath-hackathon/1.0 (https://github.com/r-a-y-y-a/happypath)'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const geoCache = new Map()
@@ -22,7 +23,7 @@ async function onemapSearch(q) {
 
 async function osmSearch(q) {
   const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=sg`, {
-    headers: { 'User-Agent': 'happypath-hackathon/1.0' },
+    headers: { 'User-Agent': UA },
   })
   if (!r.ok) return null
   const x = (await r.json())[0]
@@ -84,12 +85,15 @@ const transit = async (a, b, departIso) => {
 const title = (s) => String(s || '').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
 
 // Several matches for a search box. OneMap knows Singapore places and addresses, OpenStreetMap knows shops and cafes.
-export async function places(q) {
+// Nominatim's usage policy forbids auto-complete, so OpenStreetMap is only queried when the caller asks for it (an explicit submit).
+export async function places(q, { osm: useOsm = false } = {}) {
   const [om, osm] = await Promise.allSettled([
     fetch(`${ONEMAP}/common/elastic/search?searchVal=${encodeURIComponent(q)}&returnGeom=Y&getAddrDetails=Y&pageNum=1`)
       .then((r) => (r.ok ? r.json() : { results: [] })),
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=sg`, { headers: { 'User-Agent': 'happypath-hackathon/1.0' } })
-      .then((r) => (r.ok ? r.json() : [])),
+    useOsm
+      ? fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=sg`, { headers: { 'User-Agent': UA } })
+        .then((r) => (r.ok ? r.json() : []))
+      : Promise.resolve([]),
   ])
   const out = []
   const seen = new Set()
