@@ -111,6 +111,24 @@ async function seedFriends({ maya, jun, priya, daniel }) {
   must(await sb.from('friendships').insert(rows), 'insert friendships')
 }
 
+// Opt in with `--clean-guests`: removes anonymous users (judges and test guests) and, by cascade, their profiles,
+// friendships, posts and day memberships. Password users such as the four demo people are never touched.
+// A normal seed run leaves guests alone.
+async function removeGuests() {
+  let removed = 0
+  for (let page = 1; ; page++) {
+    const { data, error } = await sb.auth.admin.listUsers({ page, perPage: 200 })
+    if (error) throw new Error('list users: ' + error.message)
+    for (const u of data.users.filter((x) => x.is_anonymous === true)) {
+      const r = await sb.auth.admin.deleteUser(u.id)
+      if (r.error) throw new Error('remove guest: ' + r.error.message)
+      removed++
+    }
+    if (data.users.length < 200) break
+  }
+  return removed
+}
+
 async function main() {
   await checkUrls()
   const ids = await ensureUsers()
@@ -120,6 +138,7 @@ async function main() {
     Object.entries(PEOPLE).map(([k, p]) => ({ id: ids[k], display_name: p.name, avatar_url: p.avatar, bio: p.bio })),
   ), 'upsert profiles')
   await wipe(ids)
+  const guests = process.argv.includes('--clean-guests') ? await removeGuests() : null
 
   // Day members are on every stop of a day, so a stop shared with only one friend uses `with` (stop-level members)
   // on a day that only the owner belongs to. Maya shares stops with Jun alone. Priya and Daniel have their own trips.
@@ -186,7 +205,7 @@ async function main() {
 
   await seedFriends({ maya, jun, priya, daniel })
 
-  console.log(`Seeded: 4 users, 7 days (3 past + 3 friend trips + Saturday ${today}).`)
+  console.log(`${guests === null ? '' : `Removed ${guests} guest accounts. `}Seeded: 4 users, 7 days (3 past + 3 friend trips + Saturday ${today}).`)
 }
 
 main().catch((e) => {
