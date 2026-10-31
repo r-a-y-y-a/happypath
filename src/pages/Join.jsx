@@ -26,5 +26,5 @@ export default function Join() {
 
   if (err) return <ErrorState message={err} />
   if (loading || (userId && profile)) return <div className="space-y-4 p-5"><Skeleton className="h-32" /><Skeleton className="h-28" /></div>
-  return <SignIn heading="You're invited." sub="Pick a name to join." />
+  return <SignIn heading="You're invited." sub="Sign in to join." />
 }
