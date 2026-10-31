@@ -45,7 +45,7 @@ Errors are `{ "error": "message" }` with a 4xx or 5xx status.
 ```
 Profile  { id, display_name, avatar_url, bio }
 Day      { id, title, date, owner: Profile, members: Profile[], nodes: Node[] }   nodes sorted by starts_at
-Node     { id, day_id, title, venue, emoji, starts_at, ends_at, members: Profile[], post_count }
+Node     { id, day_id, title, venue, lat, lng, emoji, starts_at, ends_at, members: Profile[], post_count }
 Post     { id, node: { id, title, venue, emoji, starts_at, ends_at }, author: Profile, photo_url, caption, created_at, like_count, liked_by_me, comment_count }
 Comment  { id, post_id, author: Profile, body, created_at }
 ```

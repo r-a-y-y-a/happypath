@@ -85,6 +85,8 @@ async function buildNodes(sb, rows) {
         day_id: n.day_id,
         title: n.title,
         venue: n.venue,
+        lat: n.lat ?? null,
+        lng: n.lng ?? null,
         emoji: n.emoji,
         starts_at: n.starts_at,
         ends_at: n.ends_at,
