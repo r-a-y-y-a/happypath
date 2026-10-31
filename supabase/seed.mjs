@@ -49,6 +49,8 @@ const sgDate = (shift = 0) => {
   return d.toISOString().slice(0, 10)
 }
 const at = (date, hhmm) => new Date(`${date}T${hhmm}:00+08:00`).toISOString()
+// Post and comment times are never in the future, so a post created live during the demo always sorts above the seeded ones.
+const postAt = (date, hhmm) => new Date(Math.min(new Date(`${date}T${hhmm}:00+08:00`).getTime(), Date.now() - 60000)).toISOString()
 
 async function checkUrls() {
   const urls = [...Object.values(PHOTOS), ...Object.values(PEOPLE).map((p) => p.avatar)]
@@ -124,9 +126,9 @@ async function main() {
     for (const n of d.nodes) {
       const [node] = await insert('nodes', { day_id: day.id, owner_id: maya, title: n.title, venue: n.venue, emoji: n.emoji, starts_at: at(date, n.from), ends_at: at(date, n.to) })
       await insert('node_members', d.members.map((user_id) => ({ node_id: node.id, user_id })))
-      const [post] = await insert('posts', { node_id: node.id, author_id: n.who, photo_path: n.photo, caption: n.caption, created_at: at(date, n.at) })
+      const [post] = await insert('posts', { node_id: node.id, author_id: n.who, photo_path: n.photo, caption: n.caption, created_at: postAt(date, n.at) })
       await insert('likes', n.likes.map((user_id) => ({ post_id: post.id, user_id })))
-      await insert('comments', n.comments.map(([author_id, body], i) => ({ post_id: post.id, author_id, body, created_at: at(date, n.at.replace(/:\d\d$/, `:${String(10 + i * 7).padStart(2, '0')}`)) })))
+      await insert('comments', n.comments.map(([author_id, body], i) => ({ post_id: post.id, author_id, body, created_at: postAt(date, n.at.replace(/:\d\d$/, `:${String(10 + i * 7).padStart(2, '0')}`)) })))
     }
   }
 
@@ -144,13 +146,13 @@ async function main() {
   const climb = await mk('Climb session at Boulder Planet', 'Boulder Planet Sembawang', '🧗', '13:00', '15:00', [maya, jun, priya])
   await mk('Dinner at Lau Pa Sat', 'Lau Pa Sat', '🍢', '20:00', '21:30', [maya, priya, daniel])
 
-  const [junPost] = await insert('posts', { node_id: brunch.id, author_id: jun, photo_path: PHOTOS.brunchJun, caption: 'Eggs benny arrived. Maya is late again.', created_at: at(today, '10:25') })
-  const [priyaPost] = await insert('posts', { node_id: climb.id, author_id: priya, photo_path: PHOTOS.climbPriya, caption: 'Finally sent the purple one 💜', created_at: at(today, '13:50') })
+  const [junPost] = await insert('posts', { node_id: brunch.id, author_id: jun, photo_path: PHOTOS.brunchJun, caption: 'Eggs benny arrived. Maya is late again.', created_at: postAt(today, '10:25') })
+  const [priyaPost] = await insert('posts', { node_id: climb.id, author_id: priya, photo_path: PHOTOS.climbPriya, caption: 'Finally sent the purple one 💜', created_at: postAt(today, '13:50') })
   await insert('likes', [maya, priya, daniel].map((user_id) => ({ post_id: junPost.id, user_id })))
   await insert('likes', [maya, jun].map((user_id) => ({ post_id: priyaPost.id, user_id })))
   await insert('comments', [
-    { post_id: junPost.id, author_id: maya, body: 'I was on the way, I swear!', created_at: at(today, '10:31') },
-    { post_id: priyaPost.id, author_id: jun, body: 'Flash it again for the camera 😂', created_at: at(today, '13:58') },
+    { post_id: junPost.id, author_id: maya, body: 'I was on the way, I swear!', created_at: postAt(today, '10:31') },
+    { post_id: priyaPost.id, author_id: jun, body: 'Flash it again for the camera 😂', created_at: postAt(today, '13:58') },
   ])
 
   console.log(`Seeded: 4 users, 4 days (3 past + Saturday ${today}), 9 nodes.`)

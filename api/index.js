@@ -185,7 +185,12 @@ app.get('/api/profiles/:id', route((req, sb) => getProfile(sb, req.params.id)))
 app.get('/api/profiles/:id/diary', route(async (req, sb) => {
   const viewer = await userOf(req, sb)
   const profile = await getProfile(sb, req.params.id)
-  const { data, error } = await sb.from('posts').select('*').eq('author_id', profile.id).order('created_at', { ascending: false })
+  // The diary also shows other people's photos on nodes this person owns, so a guest's moment lands on the host's diary.
+  const owned = await sb.from('nodes').select('id').eq('owner_id', profile.id)
+  check(owned)
+  const ids = owned.data.map((n) => n.id)
+  const filter = ids.length ? `author_id.eq.${profile.id},node_id.in.(${ids.join(',')})` : `author_id.eq.${profile.id}`
+  const { data, error } = await sb.from('posts').select('*').or(filter).order('created_at', { ascending: false })
   check({ error })
   return { profile, posts: await buildPosts(sb, data, viewer?.id) }
 }))
