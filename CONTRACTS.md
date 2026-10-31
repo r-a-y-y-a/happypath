@@ -26,14 +26,15 @@ Errors are `{ "error": "message" }` with a 4xx or 5xx status.
 | GET `/api/profiles/:id` | | profile |
 | GET `/api/profiles/:id/diary` | | `{ profile, posts: Post[] }`, newest first |
 | GET `/api/profiles/:id/days` | | Day[], the person's most recent days (up to 6), newest first |
-| GET `/api/travel?from=&to=&depart=` | | `{ from, to, options: Option[], error? }`, venues are free text in Singapore, `depart` is an ISO time, options are fastest first |
+| GET `/api/places?q=` | | `{ name, address, lat, lng }[]`, up to 6 matches in Singapore for the venue search box |
+| GET `/api/travel?from=&to=&depart=&fromLat=&fromLng=&toLat=&toLng=` | | `{ from, to, options: Option[], error? }`, venues are free text in Singapore, `depart` is an ISO time, options are fastest first |
 | GET `/api/friends` | | `(Profile & { latest_day: { id, title, date, stops: { emoji, title }[] } \| null })[]`, most recently active first |
 | POST `/api/friends/:id` | | `{ ok: true }`, adds the friendship in both directions. Joining someone's day by link also befriends the day owner |
 | GET `/api/days/current` | | the caller's most recent day, as a Day, or 404 |
 | GET `/api/days/:id` | | Day |
 | POST `/api/days` | `{ title, date }` | Day, owner is added as a member |
 | POST `/api/days/:id/join` | | `{ ok: true }`, adds the caller to the day and every node in it |
-| POST `/api/days/:id/nodes` | `{ title, venue?, emoji?, starts_at, ends_at }` | Node, every current day member is added to it |
+| POST `/api/days/:id/nodes` | `{ title, venue?, lat?, lng?, emoji?, starts_at, ends_at }` | Node, every current day member is added to it |
 | POST `/api/nodes/:id/join` | | `{ ok: true }` |
 | POST `/api/posts` | `{ node_id, photo_path, caption?, created_at? }` | Post, `created_at` is the demo clock time when the clock was jumped |
 | POST `/api/posts/:id/like` | | `{ liked, like_count }`, toggles |

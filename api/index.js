@@ -1,6 +1,6 @@
 import express from 'express'
 import { createClient } from '@supabase/supabase-js'
-import { travel } from './travel.js'
+import { places, travel } from './travel.js'
 
 const app = express()
 app.use(express.json())
@@ -218,7 +218,14 @@ const daysOf = async (sb, userId, limit) => {
 app.get('/api/travel', route(async (req) => {
   const { from, to, depart } = req.query
   if (!from || !to) fail(400, 'from and to are required')
-  return travel(String(from), String(to), depart && String(depart))
+  const pt = (lat, lng) => (Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) && lat !== undefined && lat !== '' ? [Number(lat), Number(lng)] : undefined)
+  return travel(String(from), String(to), depart && String(depart), { from: pt(req.query.fromLat, req.query.fromLng), to: pt(req.query.toLat, req.query.toLng) })
+}))
+
+// Place search for the venue box, so anything in Singapore can be added.
+app.get('/api/places', route(async (req) => {
+  const q = String(req.query.q || '').trim()
+  return q.length < 2 ? [] : places(q)
 }))
 
 // Friends, each with their latest day so the Friends screen can show what they are up to.
@@ -307,7 +314,12 @@ app.post('/api/days/:id/nodes', route(async (req, sb) => {
     starts_at,
     ends_at,
   }
-  const node = await sb.from('nodes').insert(row).select().single()
+  const lat = Number(b.lat)
+  const lng = Number(b.lng)
+  const withCoords = b.lat != null && b.lng != null && Number.isFinite(lat) && Number.isFinite(lng)
+  let node = await sb.from('nodes').insert(withCoords ? { ...row, lat, lng } : row).select().single()
+  // Without supabase/friends.sql applied there are no coordinate columns, so save the stop without them.
+  if (withCoords && node.error?.code === 'PGRST204') node = await sb.from('nodes').insert(row).select().single()
   if (node.error?.code === '42501') fail(403, 'Join the day first')
   check(node)
   // RLS only lets a user add themselves; the other day members are included when the node is read.

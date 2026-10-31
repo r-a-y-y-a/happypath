@@ -1,16 +1,56 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Check, Copy, ImagePlus, Send } from 'lucide-react'
+import { Check, Copy, ImagePlus, MapPin, Send } from 'lucide-react'
 import { Button, Field, Sheet } from './ui'
-import { post, uploadPhoto, resizeImage } from '../lib/api'
+import { get, post, uploadPhoto, resizeImage } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { jumpTo, resetClock, isJumped, getOffset, nodeState, now } from '../lib/clock'
 import { fmtTime } from '../lib/fmt'
 
 const EMOJIS = ['🍽️', '🧗', '🌅', '☕', '🎬', '🏖️', '🎤', '🛍️']
 
+// Venue box that suggests real places as you type. Picking one saves its exact coordinates for travel times.
+function PlaceField({ value, onText, onPick }) {
+  const [results, setResults] = useState([])
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    const q = value.trim()
+    if (!open || q.length < 3) return setResults([])
+    let live = true
+    setBusy(true)
+    const id = setTimeout(() => {
+      get(`/places?q=${encodeURIComponent(q)}`).then((r) => live && setResults(r)).catch(() => live && setResults([])).finally(() => live && setBusy(false))
+    }, 350)
+    return () => { live = false; clearTimeout(id) }
+  }, [value, open])
+  return (
+    <div className="relative">
+      <Field label="Where" placeholder="Search any place in Singapore" value={value} autoComplete="off"
+        onChange={(e) => { onText(e.target.value); setOpen(true) }} onFocus={() => setOpen(true)} />
+      {open && (busy || results.length > 0) && (
+        <ul className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-2xl border border-surface-2 bg-surface-2 py-1 shadow-2xl shadow-black/50">
+          {busy && results.length === 0 && <li className="px-4 py-3 text-[13px] text-muted">Searching...</li>}
+          {results.map((r) => (
+            <li key={`${r.lat},${r.lng}`}>
+              <button type="button" onClick={() => { onPick(r); setOpen(false); setResults([]) }}
+                className="flex w-full items-start gap-2.5 px-4 py-2.5 text-left active:bg-surface">
+                <MapPin size={15} className="mt-0.5 shrink-0 text-coral" />
+                <span className="min-w-0">
+                  <span className="block truncate text-[14px] font-semibold">{r.name}</span>
+                  {r.address && <span className="block truncate text-[12px] text-muted">{r.address}</span>}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 export function AddNodeSheet({ open, onClose, day, onAdded }) {
-  const [f, setF] = useState({ title: '', venue: '', emoji: '🌅', start: '18:00', end: '19:30' })
+  const [f, setF] = useState({ title: '', venue: '', lat: null, lng: null, emoji: '🌅', start: '18:00', end: '19:30' })
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
@@ -26,9 +66,9 @@ export function AddNodeSheet({ open, onClose, day, onAdded }) {
     if (f.end <= f.start) return setErr('End must be after start')
     setBusy(true); setErr('')
     try {
-      await post(`/days/${day.id}/nodes`, { title: f.title.trim(), venue: f.venue.trim(), emoji: f.emoji, starts_at: iso(f.start), ends_at: iso(f.end) })
+      await post(`/days/${day.id}/nodes`, { title: f.title.trim(), venue: f.venue.trim(), lat: f.lat ?? undefined, lng: f.lng ?? undefined, emoji: f.emoji, starts_at: iso(f.start), ends_at: iso(f.end) })
       onAdded(); onClose()
-      setF({ ...f, title: '', venue: '' })
+      setF({ ...f, title: '', venue: '', lat: null, lng: null })
     } catch (x) { setErr(x.message) } finally { setBusy(false) }
   }
   return (
@@ -41,7 +81,8 @@ export function AddNodeSheet({ open, onClose, day, onAdded }) {
           ))}
         </div>
         <Field label="What" placeholder="Sunset at Marina Barrage" value={f.title} onChange={set('title')} />
-        <Field label="Where" placeholder="Marina Barrage" value={f.venue} onChange={set('venue')} />
+        <PlaceField value={f.venue} onText={(venue) => setF({ ...f, venue, lat: null, lng: null })}
+          onPick={(r) => setF({ ...f, venue: r.name, lat: r.lat, lng: r.lng })} />
         <div className="grid grid-cols-2 gap-3">
           <Field label="Starts" type="time" value={f.start} onChange={set('start')} />
           <Field label="Ends" type="time" value={f.end} onChange={set('end')} />

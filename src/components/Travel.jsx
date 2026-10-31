@@ -10,6 +10,7 @@ const PRACTICAL = { walk: 45, cycle: 60 }
 
 const km = (m) => (m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`)
 const mins = (m) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60 ? `${m % 60} min` : ''}`.trim())
+const coords = (n, k) => (n.lat != null && n.lng != null ? `&${k}Lat=${n.lat}&${k}Lng=${n.lng}` : '')
 const venueOf = (n) => (n.venue || n.title || '').trim()
 
 function Legs({ legs }) {
@@ -38,11 +39,11 @@ export default function TravelLeg({ from, to }) {
     if (!a || !b || a.toLowerCase() === b.toLowerCase()) return setData(null)
     let live = true
     setData(undefined)
-    get(`/travel?from=${encodeURIComponent(a)}&to=${encodeURIComponent(b)}&depart=${encodeURIComponent(from.ends_at)}`)
+    get(`/travel?from=${encodeURIComponent(a)}&to=${encodeURIComponent(b)}&depart=${encodeURIComponent(from.ends_at)}${coords(from, 'from')}${coords(to, 'to')}`)
       .then((d) => live && setData(d))
       .catch(() => live && setData(null))
     return () => { live = false }
-  }, [a, b, from.ends_at])
+  }, [a, b, from.ends_at, from.lat, from.lng, to.lat, to.lng])
 
   if (data === null) return null
   if (data === undefined) return <div className="mt-2 h-9 animate-pulse rounded-2xl bg-surface/60" />

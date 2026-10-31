@@ -1,17 +1,8 @@
 // Travel time between two venues in Singapore using OneMap (SLA) routing, with real MRT and bus journeys.
-// Venues are free text, so they are geocoded first: demo venues, then OneMap search, then OpenStreetMap.
+// Venues are free text from users, so they are looked up on OneMap search and then OpenStreetMap, never from a fixed list.
 
 const ONEMAP = 'https://www.onemap.gov.sg/api'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-
-// Demo venues are pinned so the demo never depends on a geocoder or its rate limit.
-const KNOWN = {
-  'common man stan': [1.2802937, 103.8479121],
-  'boulder planet sembawang': [1.4418486, 103.8248492],
-  'marina barrage': [1.2799057, 103.8704696],
-  'lau pa sat': [1.2805942, 103.8504084],
-  'east coast park': [1.3132664, 103.9245686],
-}
 
 const geoCache = new Map()
 const norm = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -39,7 +30,6 @@ async function osmSearch(q) {
 export async function geocode(name) {
   const key = norm(name)
   if (!key) return null
-  if (KNOWN[key]) return KNOWN[key]
   if (!geoCache.has(key)) {
     geoCache.set(key, (async () => (await onemapSearch(name)) || (await osmSearch(`${name} Singapore`)))().catch(() => null))
   }
@@ -88,11 +78,40 @@ const transit = async (a, b, departIso) => {
   return its.sort((x, y) => x.minutes - y.minutes)[0] || null
 }
 
+
+const title = (s) => String(s || '').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+
+// Several matches for a search box. OneMap knows Singapore places and addresses, OpenStreetMap knows shops and cafes.
+export async function places(q) {
+  const [om, osm] = await Promise.allSettled([
+    fetch(`${ONEMAP}/common/elastic/search?searchVal=${encodeURIComponent(q)}&returnGeom=Y&getAddrDetails=Y&pageNum=1`)
+      .then((r) => (r.ok ? r.json() : { results: [] })),
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=sg`, { headers: { 'User-Agent': 'happypath-hackathon/1.0' } })
+      .then((r) => (r.ok ? r.json() : [])),
+  ])
+  const out = []
+  const seen = new Set()
+  const add = (name, address, lat, lng) => {
+    const k = `${lat.toFixed(3)},${lng.toFixed(3)}`
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || seen.has(k)) return
+    seen.add(k)
+    out.push({ name, address, lat, lng })
+  }
+  if (om.status === 'fulfilled') {
+    for (const x of (om.value.results || []).slice(0, 4)) add(title(x.SEARCHVAL), title(x.ADDRESS), Number(x.LATITUDE), Number(x.LONGITUDE))
+  }
+  if (osm.status === 'fulfilled') {
+    for (const x of osm.value.slice(0, 4)) add(x.name || x.display_name.split(',')[0], x.display_name.split(',').slice(1, 3).join(',').trim(), Number(x.lat), Number(x.lon))
+  }
+  return out.slice(0, 6)
+}
+
 const cache = new Map()
 
 // Returns every way to get from `from` to `to`, fastest first, so the shortest route is options[0].
-export async function travel(from, to, departIso) {
-  const [a, b] = await Promise.all([geocode(from), geocode(to)])
+// from and to can carry coordinates picked in the app, otherwise the free text is looked up.
+export async function travel(from, to, departIso, coords = {}) {
+  const [a, b] = await Promise.all([coords.from || geocode(from), coords.to || geocode(to)])
   if (!a || !b) return { options: [], error: 'Could not place one of the venues on the map' }
   const hour = (departIso || '').slice(0, 13)
   const key = `${a}|${b}|${hour}`
