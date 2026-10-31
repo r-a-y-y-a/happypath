@@ -338,7 +338,10 @@ app.post('/api/days/:id/join', route(async (req, sb) => {
       { ignoreDuplicates: true },
     ))
   }
-  await befriend(sb, user.id, day.data.owner_id).catch(() => {})
+  // Joining makes you friends with everyone already on the day (the owner is always a member).
+  const members = await sb.from('day_members').select('user_id').eq('day_id', day.data.id)
+  const others = [...new Set([day.data.owner_id, ...(members.error ? [] : members.data.map((m) => m.user_id))])].filter((id) => id && id !== user.id)
+  await Promise.all(others.map((id) => befriend(sb, user.id, id).catch(() => {})))
   return { ok: true }
 }))
 

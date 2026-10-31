@@ -80,3 +80,7 @@ A bottom bar with four tabs. Each tab is a route, and every screen renders insid
 | Social | `/social` | all friends as profile cards (tap opens `/profile/:id`) and a search to add people with `GET /api/profiles?q=` and `POST /api/friends/:id` |
 | Account | `/account` | edit name and bio with `PUT /api/profiles/me`, day or night theme, link to the caller's diary, sign out |
 Links that leave a tab pass `state={{ from: 'friends' | 'social' | 'account' }}` so the bar keeps the right tab highlighted.
+
+## Joining a day
+`POST /api/days/:id/join` also makes the caller friends with the day owner and every existing member.
+The invite sheet offers the QR code, a Copy invite link button and, where the device supports it, a native Share button.
