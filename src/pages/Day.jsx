@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Camera, ChevronRight, Plus, UserPlus } from 'lucide-react'
 import { get, post } from '../lib/api'
@@ -43,7 +43,7 @@ const TimelineSkeleton = () => (
   </div>
 )
 
-const CHIP = {
+export const CHIP = {
   live: ['Live now', 'bg-coral text-ink'],
   grace: ['Post window open', 'bg-amber text-ink'],
   upcoming: ['Up next', 'bg-surface-2 text-muted'],
@@ -52,6 +52,7 @@ const CHIP = {
 
 function NodeCard({ node, next, i, t, userId }) {
   const { capture, posted } = useCapture()
+  const location = useLocation()
   const st = nodeState(node, t)
   const open = st === 'live' || st === 'grace'
   const isMember = node.members.some((m) => m.id === userId)
@@ -64,19 +65,22 @@ function NodeCard({ node, next, i, t, userId }) {
         <span className="relative text-[13px]">{node.emoji}</span>
       </span>
       <div className={`rounded-3xl p-4 ${open ? 'bg-gradient-to-br from-surface-2 to-surface ring-1 ring-coral/60' : 'bg-surface shadow-sm shadow-amber-900/10'} ${st === 'past' ? 'opacity-75' : ''}`}>
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="truncate font-display text-xl font-bold leading-tight">{node.title}</h3>
-            <p className="mt-0.5 truncate text-[13px] text-muted">{node.venue ? `${node.venue} · ` : ''}{fmtRange(node)}</p>
+        <Link to={`/node/${node.id}`} state={location.state} aria-label={`${node.title}: see who is here and their photos`} className="block">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="truncate font-display text-xl font-bold leading-tight">{node.title}</h3>
+              <p className="mt-0.5 truncate text-[13px] text-muted">{node.venue ? `${node.venue} · ` : ''}{fmtRange(node)}</p>
+            </div>
+            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${cls}`}>{label}</span>
           </div>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${cls}`}>{label}</span>
-        </div>
-        <div className="mt-3 flex items-center justify-between">
-          <AvatarStack people={node.members} size={30} />
-          <span className="text-xs font-semibold text-muted">
-            {node.post_count} {node.post_count === 1 ? 'moment' : 'moments'}
-          </span>
-        </div>
+          <div className="mt-3 flex items-center justify-between">
+            <AvatarStack people={node.members} size={30} />
+            <span className="flex items-center gap-1 text-xs font-semibold text-muted">
+              {node.post_count} {node.post_count === 1 ? 'moment' : 'moments'}
+              <ChevronRight size={14} />
+            </span>
+          </div>
+        </Link>
         {open && isMember && !posted.includes(node.id) && (
           <Button onClick={() => capture(node)} className="mt-3 h-11 w-full"><Camera size={18} />Post your moment</Button>
         )}

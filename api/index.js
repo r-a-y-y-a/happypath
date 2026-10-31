@@ -285,6 +285,22 @@ app.get('/api/days/current', route(async (req, sb) => {
 
 app.get('/api/days/:id', route((req, sb) => getDay(sb, req.params.id)))
 
+// One stop with everyone on it and every photo shared there, for the stop detail screen.
+app.get('/api/nodes/:id', route(async (req, sb) => {
+  const viewer = await userOf(req, sb)
+  const n = await sb.from('nodes').select('*').eq('id', req.params.id).maybeSingle()
+  check(n)
+  if (!n.data) fail(404, 'Stop not found')
+  const [day, posts] = await Promise.all([
+    sb.from('days').select('id, title, date').eq('id', n.data.day_id).maybeSingle(),
+    sb.from('posts').select('*').eq('node_id', n.data.id).order('created_at', { ascending: false }),
+  ])
+  check(day)
+  check(posts)
+  const [node] = await buildNodes(sb, [n.data])
+  return { node, day: day.data, posts: await buildPosts(sb, posts.data, viewer?.id) }
+}))
+
 app.post('/api/days', route(async (req, sb) => {
   const user = await need(req, sb)
   const b = req.body || {}
