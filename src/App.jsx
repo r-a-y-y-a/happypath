@@ -6,6 +6,8 @@ import Join from './pages/Join'
 import Day, { Home } from './pages/Day'
 import Profile, { PostDetail } from './pages/Profile'
 import Friends from './pages/Friends'
+import Social from './pages/Social'
+import Account from './pages/Account'
 import { Skeleton } from './components/ui'
 
 function Gate({ children }) {
@@ -25,6 +27,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/day/:id" element={<Day />} />
             <Route path="/friends" element={<Friends />} />
+            <Route path="/social" element={<Social />} />
+            <Route path="/account" element={<Account />} />
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/profile/:id/post/:postId" element={<PostDetail />} />
           </Route>

@@ -76,13 +76,24 @@ const transit = async (a, b, departIso) => {
     meters: Math.round(i.legs.reduce((n, l) => n + (l.distance || 0), 0)),
     walk_meters: Math.round(i.walkDistance || 0),
     transfers: i.transfers ?? Math.max(0, i.legs.filter((l) => l.mode !== 'WALK').length - 1),
-    legs: i.legs.filter((l) => l.mode !== 'WALK').map((l) => ({ mode: l.mode === 'BUS' ? 'bus' : 'mrt', label: legLabel(l), from: l.from?.name, to: l.to?.name })),
+    legs: i.legs.filter((l) => l.mode !== 'WALK').map((l) => ({
+      mode: l.mode === 'BUS' ? 'bus' : 'mrt',
+      label: legLabel(l),
+      from: stopName(l.from?.name),
+      to: stopName(l.to?.name),
+      // Stops ridden, counting the one you get off at.
+      stops: Array.isArray(l.intermediateStops) ? l.intermediateStops.length + 1 : Math.max(1, (l.to?.stopIndex ?? 0) - (l.from?.stopIndex ?? 0)),
+      minutes: Math.max(1, Math.round(((l.endTime ?? 0) - (l.startTime ?? 0)) / 60000)),
+      ...(l.mode === 'BUS' && l.to?.stopCode ? { to_code: l.to.stopCode } : {}),
+    })),
   }))
   return its.sort((x, y) => x.minutes - y.minutes)[0] || null
 }
 
 
 const title = (s) => String(s || '').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+// OneMap shouts transit stop names in capitals.
+const stopName = (s) => (s && s === s.toUpperCase() ? title(s).replace(/\bMrt\b/g, 'MRT').replace(/\bLrt\b/g, 'LRT') : s)
 
 // Several matches for a search box. OneMap knows Singapore places and addresses, OpenStreetMap knows shops and cafes.
 // Nominatim's usage policy forbids auto-complete, so OpenStreetMap is only queried when the caller asks for it (an explicit submit).

@@ -1,13 +1,13 @@
 import { createContext, useContext, useMemo, useRef, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Clock3, Users } from 'lucide-react'
-import { Avatar } from './ui'
+import { Clock3 } from 'lucide-react'
 import Banner from './Banner'
 import { CameraSheet, ClockSheet } from './Sheets'
 import { useAuth } from '../lib/auth'
 import { isJumped, nodeState, useClockNodes, useNow, windowOpen } from '../lib/clock'
 import { fmtTime } from '../lib/fmt'
+import BottomNav from './BottomNav'
 
 const CaptureCtx = createContext(null)
 export const useCapture = () => useContext(CaptureCtx)
@@ -16,7 +16,7 @@ const postedKey = 'hp_posted'
 const getPosted = () => { try { return JSON.parse(localStorage.getItem(postedKey) || '[]') } catch { return [] } }
 
 export default function Layout() {
-  const { profile, userId } = useAuth()
+  const { userId } = useAuth()
   const nav = useNavigate()
   const t = useNow()
   const nodes = useClockNodes()
@@ -45,22 +45,16 @@ export default function Layout() {
   return (
     <CaptureCtx.Provider value={ctx}>
       <div className="mx-auto min-h-dvh w-full max-w-md pb-28">
-        <header className="sticky top-0 z-30 flex items-center justify-between bg-ink/80 px-5 pb-3 pt-[max(14px,env(safe-area-inset-top))] backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex items-center justify-between bg-page/80 px-5 pb-3 pt-[max(14px,env(safe-area-inset-top))] backdrop-blur-xl">
           <Link to="/" onClick={tapLogo} className="select-none font-display text-[26px] font-extrabold tracking-tight">
-            happy<span className="bg-gradient-to-r from-coral to-amber bg-clip-text text-transparent">path</span>
+            happy<span className="bg-gradient-to-r from-coral-ink to-amber-ink bg-clip-text text-transparent">path</span>
           </Link>
           <div className="flex items-center gap-3">
             {isJumped() && (
-              <button onClick={() => setClockOpen(true)} className="flex items-center gap-1 rounded-full bg-mint/15 px-2.5 py-1 text-xs font-bold text-mint">
+              <button onClick={() => setClockOpen(true)} className="flex items-center gap-1 rounded-full bg-mint/15 px-2.5 py-1 text-xs font-bold text-mint-ink">
                 <Clock3 size={13} />{fmtTime(t)}
               </button>
             )}
-            {profile && (
-              <Link to="/friends" aria-label="Friends" className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-cloud">
-                <Users size={18} />
-              </Link>
-            )}
-            {profile && <Link to={`/profile/${profile.id}`}><Avatar p={profile} size={36} /></Link>}
           </div>
         </header>
         <AnimatePresence mode="wait">
@@ -69,6 +63,7 @@ export default function Layout() {
           </motion.main>
         </AnimatePresence>
       </div>
+      <BottomNav />
       <Banner node={live} onPost={capture} onDismiss={() => setDismissed([...dismissed, live.id])} />
       <input ref={input} type="file" accept="image/*" capture="environment" className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; f && setFile(f) }} />

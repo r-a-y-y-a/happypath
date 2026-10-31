@@ -172,6 +172,18 @@ app.get('/api/health', async (req, res) => {
   }
 })
 
+// Search people to add as friends. With no search it lists everyone else.
+app.get('/api/profiles', route(async (req, sb) => {
+  const user = await need(req, sb)
+  const q = String(req.query.q || '').trim().replace(/[%,()*]/g, ' ').trim()
+  let query = sb.from('profiles').select('id, display_name, avatar_url, bio').neq('id', user.id).order('display_name').limit(30)
+  if (q) query = query.ilike('display_name', `%${q}%`)
+  const [people, f] = await Promise.all([query, sb.from('friendships').select('friend_id').eq('user_id', user.id)])
+  check(people)
+  const friendIds = new Set(f.error ? [] : f.data.map((x) => x.friend_id))
+  return people.data.map((x) => ({ ...x, is_friend: friendIds.has(x.id) }))
+}))
+
 app.put('/api/profiles/me', route(async (req, sb) => {
   const user = await need(req, sb)
   const b = req.body || {}

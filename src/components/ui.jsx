@@ -12,7 +12,7 @@ export function Avatar({ p, size = 36, ring = false }) {
   return (
     <span
       style={style}
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br ${GRADS[idx]} font-bold text-ink ${ring ? 'ring-2 ring-ink' : ''}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br ${GRADS[idx]} font-bold text-ink ${ring ? 'ring-2 ring-page' : ''}`}
       title={p?.display_name}
     >
       {p?.avatar_url ? (
@@ -36,7 +36,7 @@ export function AvatarStack({ people = [], size = 28, max = 4 }) {
       ))}
       {extra > 0 && (
         <span style={{ width: size, height: size, marginLeft: -size * 0.3, fontSize: size * 0.38 }}
-          className="inline-flex items-center justify-center rounded-full bg-surface-2 font-semibold text-muted ring-2 ring-ink">
+          className="inline-flex items-center justify-center rounded-full bg-surface-2 font-semibold text-muted ring-2 ring-page">
           +{extra}
         </span>
       )}
@@ -51,7 +51,7 @@ export const Skeleton = ({ className = '' }) => (
 export function Button({ variant = 'primary', className = '', ...p }) {
   const v = {
     primary: 'bg-gradient-to-r from-coral to-amber text-ink shadow-lg shadow-coral/25',
-    ghost: 'bg-surface-2 text-cloud',
+    ghost: 'bg-surface-2 text-fg',
     mint: 'bg-mint text-ink',
   }[variant]
   return (
@@ -64,14 +64,14 @@ export function Button({ variant = 'primary', className = '', ...p }) {
 export const Field = ({ label, ...p }) => (
   <label className="block">
     <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted">{label}</span>
-    <input {...p} className="h-12 w-full rounded-2xl border border-surface-2 bg-surface px-4 text-[16px] text-cloud outline-none placeholder:text-muted/60 focus:border-coral" />
+    <input {...p} className="h-12 w-full rounded-2xl border border-surface-2 bg-surface px-4 text-[16px] text-fg outline-none placeholder:text-muted/60 focus:border-coral" />
   </label>
 )
 
 export function ErrorState({ message = 'Something went wrong', onRetry }) {
   return (
     <div className="mx-5 mt-10 flex flex-col items-center gap-3 rounded-3xl bg-surface p-8 text-center">
-      <AlertTriangle className="text-amber" />
+      <AlertTriangle className="text-amber-ink" />
       <p className="text-sm text-muted">{message}</p>
       {onRetry && <Button variant="ghost" onClick={onRetry} className="h-10">Try again</Button>}
     </div>
@@ -100,10 +100,10 @@ export function Sheet({ open, onClose, title, children }) {
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <motion.div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}
+          <motion.div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onClose}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
           <motion.div
-            className="relative max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-[32px] bg-surface p-5 pb-8"
+            className="relative max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-[32px] bg-surface p-5 shadow-2xl pb-8"
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 320 }}
             drag="y" dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: 0.6 }}

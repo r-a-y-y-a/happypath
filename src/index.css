@@ -1,23 +1,75 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Day theme (sunny cream) is the base; night theme overrides under [data-theme="dark"]. */
+:root {
+  color-scheme: light;
+  --hp-page: #fff8e6;
+  --hp-fg: #3b2710;
+  --hp-surface: #ffffff;
+  --hp-surface-2: #ffe8b5;
+  --hp-muted: #7a6444;
+  --hp-coral-ink: #c8321e;
+  --hp-amber-ink: #a04a05;
+  --hp-mint-ink: #0c8a78;
+  --hp-glow-1: rgb(255 205 80 / 0.55);
+  --hp-glow-2: rgb(255 140 90 / 0.18);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --hp-page: #0f0b1a;
+  --hp-fg: #f8f5ff;
+  --hp-surface: #1c1630;
+  --hp-surface-2: #2a2145;
+  --hp-muted: #a39bbf;
+  --hp-coral-ink: #ff6b57;
+  --hp-amber-ink: #ffc145;
+  --hp-mint-ink: #5eead4;
+  --hp-glow-1: transparent;
+  --hp-glow-2: transparent;
+}
+
 @theme {
-  --color-ink: #0f0b1a;
-  --color-surface: #1c1630;
-  --color-surface-2: #2a2145;
-  --color-coral: #ff6b57;
-  --color-amber: #ffc145;
-  --color-mint: #5eead4;
-  --color-cloud: #f8f5ff;
-  --color-muted: #a39bbf;
+  /* Fixed brand constants: use for text/fills sitting on bright accents or photos */
+  --color-ink: #3b2710;
+  --color-cloud: #fff8e6;
+  --color-coral: #f2593a;
+  --color-amber: #ffb81f;
+  --color-mint: #6fdcc8;
+
+  /* Themed semantic tokens */
+  --color-page: var(--hp-page);
+  --color-fg: var(--hp-fg);
+  --color-surface: var(--hp-surface);
+  --color-surface-2: var(--hp-surface-2);
+  --color-muted: var(--hp-muted);
+  --color-coral-ink: var(--hp-coral-ink);
+  --color-amber-ink: var(--hp-amber-ink);
+  --color-mint-ink: var(--hp-mint-ink);
+
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 body {
   margin: 0;
-  background: var(--color-ink);
-  color: var(--color-cloud);
+  min-height: 100dvh;
+  color: var(--color-fg);
   font-family: var(--font-sans);
+  background-color: var(--color-page);
+  background-image:
+    radial-gradient(120% 60% at 85% -10%, var(--hp-glow-1), transparent 60%),
+    radial-gradient(90% 50% at -10% 0%, var(--hp-glow-2), transparent 60%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  transition: background-color 0.25s, color 0.25s;
+}
+
+:focus-visible {
+  outline: 2px solid var(--hp-coral-ink);
+  outline-offset: 2px;
 }
 
 .no-scrollbar { scrollbar-width: none; }
