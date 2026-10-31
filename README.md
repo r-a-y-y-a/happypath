@@ -8,7 +8,7 @@ Live demo: https://happypath-theta.vercel.app (tap "Demo login as Maya").
 
 ## Demo script (under 3 minutes)
 
-1. Open the day "Saturday in the city". It already has stops, friends and posted photos.
+1. Open the day "Saturday in the city". It already has three stops and a posted brunch photo, and Maya is the only one on the day.
 2. Tap "Add a stop", search a real place in Singapore, and add it. It slides into the timeline.
 3. Tap "Invite friends" to show the QR code. A second phone scans it, picks a name and joins the day.
 4. Tap the logo five times to open the demo clock and jump to a stop. The "Happening now - post your moment" banner drops on both phones.

@@ -22,7 +22,6 @@ const PEOPLE = {
 
 const PHOTOS = {
   brunch: img('1504754524776-8f4f37790ca0'),
-  brunchJun: img('1551632436-cbf8dd35adfa'),
   climb: img('1522163182402-834f871fd851'),
   coffee: img('1495474472287-4d71bcdd2085'),
   run: img('1476480862126-209bfaa8edc8'),
@@ -30,7 +29,6 @@ const PHOTOS = {
   dinner: img('1414235077428-338989a2e8c0'),
   hike: img('1506905925346-21bda4d32df4'),
   ramen: img('1540189549336-e6e99c3679fe'),
-  climbJun: img('1534438327276-14e5300c3a48'),
   bike: img('1485965120184-e220f721d03e'),
   ubinLunch: img('1504674900247-0877df9cc836'),
   pancakes: img('1567620905732-2d1ec7ab7445'),
@@ -186,22 +184,13 @@ async function main() {
   ] })
 
   // Today: Saturday in the city. The sunset node is created live in the demo, so it is not seeded.
-  // Jun shares brunch and the climb with Maya. Dinner is Maya's alone until a guest joins.
-  const { day, date: today } = await seedDay({ owner: maya, shift: 0, title: 'Saturday in the city', nodes: [
-    { title: 'Brunch at Common Man', venue: 'Common Man Stan', emoji: '🥐', from: '10:00', to: '11:30', with: [jun] },
-    { title: 'Climb session at Boulder Planet', venue: 'Boulder Planet Sembawang', emoji: '🧗', from: '13:00', to: '15:00', with: [jun] },
+  // Today's day is Maya's alone: nobody else is a member or on a stop until a guest joins live in the demo.
+  // Friends can still like and comment on her brunch photo, because diaries are public.
+  const { date: today } = await seedDay({ owner: maya, shift: 0, title: 'Saturday in the city', nodes: [
+    { title: 'Brunch at Common Man', venue: 'Common Man Stan', emoji: '🥐', from: '10:00', to: '11:30', photo: PHOTOS.brunch, caption: 'Brunch first, plans second.', at: '10:25', who: maya, likes: [jun, priya, daniel], comments: [[jun, 'Save me a plate next time!'], [priya, 'Those eggs 😍']] },
+    { title: 'Climb session at Boulder Planet', venue: 'Boulder Planet Sembawang', emoji: '🧗', from: '13:00', to: '15:00' },
     { title: 'Dinner at Lau Pa Sat', venue: 'Lau Pa Sat', emoji: '🍢', from: '20:00', to: '21:30' },
   ] })
-  const todayNodes = must(await sb.from('nodes').select('id, title').eq('day_id', day.id), 'read today nodes')
-  const nodeId = (t) => todayNodes.find((n) => n.title.startsWith(t)).id
-  const [junPost] = await insert('posts', { node_id: nodeId('Brunch'), author_id: jun, photo_path: PHOTOS.brunchJun, caption: 'Eggs benny arrived. Maya is late again.', created_at: postAt(today, '10:25') })
-  const [junClimb] = await insert('posts', { node_id: nodeId('Climb'), author_id: jun, photo_path: PHOTOS.climbJun, caption: 'Finally sent the purple one 💜', created_at: postAt(today, '13:50') })
-  await insert('likes', [maya, priya, daniel].map((user_id) => ({ post_id: junPost.id, user_id })))
-  await insert('likes', [maya, priya].map((user_id) => ({ post_id: junClimb.id, user_id })))
-  await insert('comments', [
-    { post_id: junPost.id, author_id: maya, body: 'I was on the way, I swear!', created_at: postAt(today, '10:31') },
-    { post_id: junClimb.id, author_id: maya, body: 'Flash it again for the camera 😂', created_at: postAt(today, '13:58') },
-  ])
 
   await seedFriends({ maya, jun, priya, daniel })
 
