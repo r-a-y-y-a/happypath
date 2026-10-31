@@ -16,14 +16,14 @@ export default function SignIn({ onDone, heading = 'Plan the day.', sub = 'Catch
   }
   return (
     <div className="relative mx-auto flex min-h-dvh max-w-md flex-col overflow-hidden px-6 pb-8 pt-12">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-coral/30 blur-[90px]" />
-      <div className="pointer-events-none absolute -left-24 top-72 h-64 w-64 rounded-full bg-mint/15 blur-[90px]" />
+      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-amber/60 blur-[90px]" />
+      <div className="pointer-events-none absolute -left-24 top-72 h-64 w-64 rounded-full bg-mint/40 blur-[90px]" />
       <div className="relative grid grid-cols-3 gap-2.5">
         {photos.map((p, i) => (
           <motion.img key={p} src={`https://images.unsplash.com/photo-${p}?w=400&h=533&q=70&auto=format&fit=crop`} alt=""
             initial={{ opacity: 0, y: 24, rotate: i % 2 ? 3 : -3 }} animate={{ opacity: 1, y: i % 2 ? 14 : 0, rotate: i % 2 ? 2 : -2 }}
             transition={{ delay: i * 0.07, type: 'spring', damping: 16 }}
-            className="aspect-[3/4] w-full rounded-2xl object-cover shadow-xl shadow-black/40" />
+            className="aspect-[3/4] w-full rounded-2xl object-cover shadow-xl shadow-amber-900/25" />
         ))}
       </div>
       <div className="relative mt-12">

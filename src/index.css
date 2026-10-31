@@ -1,23 +1,31 @@
 @import "tailwindcss";
 
+/* Sunny-day palette. "cloud" is the page cream, "ink" is warm brown text. */
 @theme {
-  --color-ink: #0f0b1a;
-  --color-surface: #1c1630;
-  --color-surface-2: #2a2145;
-  --color-coral: #ff6b57;
-  --color-amber: #ffc145;
-  --color-mint: #5eead4;
-  --color-cloud: #f8f5ff;
-  --color-muted: #a39bbf;
+  --color-ink: #3b2710;
+  --color-surface: #ffffff;
+  --color-surface-2: #ffe8b5;
+  --color-coral: #f2593a;
+  --color-amber: #ffb81f;
+  --color-mint: #6fdcc8;
+  --color-mint-deep: #0c8a78;
+  --color-cloud: #fff8e6;
+  --color-muted: #7a6444;
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 body {
   margin: 0;
-  background: var(--color-ink);
-  color: var(--color-cloud);
+  min-height: 100dvh;
+  color: var(--color-ink);
   font-family: var(--font-sans);
+  background-color: var(--color-cloud);
+  background-image:
+    radial-gradient(120% 60% at 85% -10%, rgb(255 205 80 / 0.55), transparent 60%),
+    radial-gradient(90% 50% at -10% 0%, rgb(255 140 90 / 0.18), transparent 60%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .no-scrollbar { scrollbar-width: none; }
